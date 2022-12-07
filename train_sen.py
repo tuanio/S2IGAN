@@ -53,11 +53,28 @@ def main(cfg: DictConfig):
     except:
         print("Can't activate Pytorch 2.0")
 
-    model_params = (
-        image_encoder.get_params()
-        + speech_encoder.get_params()
-        + list(classifier.parameters())
-    )
+    if multi_gpu:
+        model_params = (
+            image_encoder.module.get_params()
+            + speech_encoder.module.get_params()
+            + list(classifier.module.parameters())
+        )
+        image_encoder_summary = summary(image_encoder.module, [(3, 299, 299,)])
+        speech_encoder_summary = summary(speech_encoder.module, [(cfg.data.general.n_mels, 250,), (250,)])
+        classifier_summary = summary(classifier.module, [(cfg.model.image_encoder.output_dim,)])
+    else:
+        model_params = (
+            image_encoder.get_params()
+            + speech_encoder.get_params()
+            + list(classifier.parameters())
+        )
+        image_encoder_summary = summary(image_encoder, [(3, 299, 299,)])
+        speech_encoder_summary = summary(speech_encoder, [(cfg.data.general.n_mels, 250,), (250,)])
+        classifier_summary = summary(classifier, [(cfg.model.image_encoder.output_dim,)])
+    
+    print(image_encoder_summary)
+    print(speech_encoder_summary)
+    print(classifier_summary)
 
     optimizer = torch.optim.AdamW(model_params, **cfg.optimizer)
     scheduler = None
