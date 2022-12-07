@@ -11,8 +11,11 @@ class ImageEncoder(nn.Module):
 
     def __init__(self, output_dim: int = 1024):
         super().__init__()
-        weights = torchvision.models.get_weight("Inception_V3_Weights.DEFAULT")
-        model = torchvision.models.inception_v3(weights=weights)
+        try:
+            weights = torchvision.models.get_weight("Inception_V3_Weights.DEFAULT")
+            model = torchvision.models.inception_v3(weights=weights)
+        except:
+            model = torchvision.models.inception_v3(pretrained=True)
         model.AuxLogits = None
         model.aux_logits = False
         set_non_grad(model)
