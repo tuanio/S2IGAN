@@ -34,7 +34,8 @@ class SENDataset(Dataset):
             ]
             for datum in data
         ]
-        self.walker = [j for i in walker for j in i]
+        # check exits
+        self.walker = [j for i in walker for j in i if os.path.exits(j['audio']) and os.path.exists(j['img'])]
         subset = json_file.rsplit(os.sep, 1)[-1].split("_", 1)[0]
 
         self.img_transform = {
