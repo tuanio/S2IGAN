@@ -9,16 +9,14 @@ from torch.utils.data import DataLoader
 from data.dataloader import sen_collate_fn
 from omegaconf import DictConfig, OmegaConf
 from s2igan.sen import ImageEncoder, SpeechEncoder
-from s2igan.sen.utils import sen_train_epoch
+from s2igan.sen.utils import sen_train_epoch, sen_eval_epoch
 from s2igan.loss import SENLoss
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-cp", default="conf")
-parser.add_argument("-cn", default="sen_config")
-args = parser.parse_args()
+config_path = "conf"
+config_name = "sen_config"
 
 
-@hydra.main(version_base=None, config_path=args.cp, config_name=args.cn)
+@hydra.main(version_base=None, config_path=config_path, config_name=config_name)
 def main(cfg: DictConfig):
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     multi_gpu = torch.cuda.device_count() > 1
@@ -59,25 +57,52 @@ def main(cfg: DictConfig):
     if cfg.scheduler.use:
         steps_per_epoch = len(train_dataloader)
         sched_dict = dict(
-            epochs=cfg.training.max_epoch, steps_per_epoch=steps_per_epoch
+            epochs=cfg.experiment.max_epoch, steps_per_epoch=steps_per_epoch
         )
-        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, **sched_dict, **cfg.scheduler.args)
+        scheduler = torch.optim.lr_scheduler.OneCycleLR(
+            optimizer, **sched_dict, **cfg.scheduler.args
+        )
     criterion = SENLoss(**cfg.loss).to(device)
 
-    log_wandb = cfg.training.log_wandb
-    for epoch in range(cfg.training.max_epoch):
-        sen_train_epoch(
+    log_wandb = cfg.experiment.log_wandb
+
+    if cfg.experiment.train:
+        for epoch in range(cfg.experiment.max_epoch):
+            sen_train_epoch(
+                image_encoder,
+                speech_encoder,
+                classifier,
+                train_dataloader,
+                optimizer,
+                scheduler,
+                criterion,
+                device,
+                epoch,
+                log_wandb,
+            )
+            sen_eval_epoch(
+                image_encoder,
+                speech_encoder,
+                classifier,
+                test_dataloder,
+                criterion,
+                device,
+                epoch,
+                log_wandb,
+            )
+
+    if cfg.experiment.test:
+        eval_result = sen_eval_epoch(
             image_encoder,
             speech_encoder,
             classifier,
-            train_dataloader,
-            optimizer,
-            scheduler,
+            test_dataloder,
             criterion,
             device,
             epoch,
-            log_wandb
+            log_wandb,
         )
+        print("Eval result:", eval_result)
 
 
 if __name__ == "__main__":

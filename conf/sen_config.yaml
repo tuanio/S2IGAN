@@ -55,7 +55,9 @@ scheduler:
     pct_start: 0.2
     max_lr: ${optimizer.lr}
 
-training:
+experiment:
+  train: true
+  test: true
   max_epoch: 100
   log_wandb: false
 
