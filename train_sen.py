@@ -19,7 +19,7 @@ config_name = "sen_config"
 
 @hydra.main(version_base=None, config_path=config_path, config_name=config_name)
 def main(cfg: DictConfig):
-    wandb.init(project='speech2image', name='SEN')
+    wandb.init(project="speech2image", name="SEN")
 
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     multi_gpu = torch.cuda.device_count() > 1

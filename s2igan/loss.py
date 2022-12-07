@@ -61,4 +61,4 @@ class SENLoss(nn.Module):
     def forward(self, x, y, cls_x, cls_y, labels):
         match_loss = self.matching_loss(x, y, labels)
         dist_loss = self.distinctive_loss(cls_x, cls_y, labels)
-        return match_loss + dist_loss
+        return match_loss, dist_loss, match_loss + dist_loss

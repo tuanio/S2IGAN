@@ -33,7 +33,7 @@ def sen_train_epoch(
         cls_img = classifier(V)
         cls_speech = classifier(A)
 
-        loss = criterion(V, A, cls_img, cls_speech, labels)
+        match_loss, dist_loss, loss = criterion(V, A, cls_img, cls_speech, labels)
         loss.backward()
 
         optimizer.step()
@@ -44,7 +44,10 @@ def sen_train_epoch(
         run_loss += loss
 
         if log_wandb:
-            wandb.log({"train/loss": loss})
+            wandb.log({"train/epoch": epoch})
+            wandb.log({"train/sen_loss": loss})
+            wandb.log({"train/matching_loss": match_loss.item()})
+            wandb.log({"train/distinctive_loss": dist_loss.item()})
 
         pbar.set_description(f"[Epoch: {epoch}] | Loss: {loss:.2f}")
 
@@ -80,7 +83,7 @@ def sen_eval_epoch(
             cls_img = classifier(V)
             cls_speech = classifier(A)
 
-            loss = criterion(V, A, cls_img, cls_speech, labels)
+            match_loss, dist_loss, loss = criterion(V, A, cls_img, cls_speech, labels)
 
             loss = loss.item()
 
@@ -95,7 +98,9 @@ def sen_eval_epoch(
             run_speech_acc += speech_acc
 
             if log_wandb:
-                wandb.log({"val/loss": loss})
+                wandb.log({"val/sen_loss": loss})
+                wandb.log({"val/matching_loss": match_loss.item()})
+                wandb.log({"val/distinctive_loss": dist_loss.item()})
                 wandb.log({"val/image_accuracy": img_acc})
                 wandb.log({"val/speech_accuracy": speech_acc})
 
