@@ -59,6 +59,8 @@ class SpeechEncoder(nn.Module):
         """
         cnn_out = self.cnn(mel_spec)
 
+        print(mel_spec_len)
+
         l = [(y - self.kernel_size) // self.stride + 1 for y in mel_spec_len]
         l = [(y - self.kernel_size) // self.stride + 1 for y in l]
 
