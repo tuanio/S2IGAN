@@ -46,6 +46,13 @@ def main(cfg: DictConfig):
     speech_encoder = speech_encoder.to(device)
     classifier = classifier.to(device)
 
+    try:
+        image_encoder = torch.compile(image_encoder)
+        speech_encoder = torch.compile(speech_encoder)
+        classifier = torch.compile(classifier)
+    except:
+        print("Can't activate Pytorch 2.0")
+
     model_params = (
         image_encoder.get_params()
         + speech_encoder.get_params()
