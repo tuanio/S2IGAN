@@ -60,8 +60,14 @@ def main(cfg: DictConfig):
             + list(classifier.module.parameters())
         )
         image_encoder_summary = summary(image_encoder.module, [(3, 299, 299,)])
-        speech_encoder_summary = summary(speech_encoder.module, [(cfg.data.general.n_mels, 250,), (1,)], dtypes=[torch.float, torch.long])
-        classifier_summary = summary(classifier.module, [(cfg.model.image_encoder.output_dim,)])
+        speech_encoder_summary = summary(
+            speech_encoder.module,
+            [(cfg.data.general.n_mels, 250,), (1,)],
+            dtypes=[torch.float, torch.long],
+        )
+        classifier_summary = summary(
+            classifier.module, [(cfg.model.image_encoder.output_dim,)]
+        )
     else:
         model_params = (
             image_encoder.get_params()
@@ -69,9 +75,15 @@ def main(cfg: DictConfig):
             + list(classifier.parameters())
         )
         image_encoder_summary = summary(image_encoder, [(3, 299, 299,)])
-        speech_encoder_summary = summary(speech_encoder, [(cfg.data.general.n_mels, 250,), (250,)], dtypes=[torch.float, torch.long])
-        classifier_summary = summary(classifier, [(cfg.model.image_encoder.output_dim,)])
-    
+        speech_encoder_summary = summary(
+            speech_encoder,
+            [(cfg.data.general.n_mels, 250,), (250,)],
+            dtypes=[torch.float, torch.long],
+        )
+        classifier_summary = summary(
+            classifier, [(cfg.model.image_encoder.output_dim,)]
+        )
+
     print(image_encoder_summary)
     print(speech_encoder_summary)
     print(classifier_summary)
