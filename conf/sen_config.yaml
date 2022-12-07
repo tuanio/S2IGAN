@@ -59,7 +59,7 @@ experiment:
   train: true
   test: true
   max_epoch: 100
-  log_wandb: false
+  log_wandb: true
 
 loss:
   beta: 10

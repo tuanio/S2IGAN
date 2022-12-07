@@ -83,18 +83,23 @@ def sen_eval_epoch(
 
             loss = loss.item()
 
-            if log_wandb:
-                wandb.log({"train/loss": loss})
-
             img_acc = (cls_img.argmax(-1) == labels).sum() / labels.size(0) * 100
             speech_acc = (cls_speech.argmax(-1) == labels).sum() / labels.size(0) * 100
 
+            img_acc = img_acc.item()
+            speech_acc = speech_acc.item()
+
             run_loss += loss
-            run_img_acc += img_acc.item()
-            run_speech_acc += speech_acc.item()
+            run_img_acc += img_acc
+            run_speech_acc += speech_acc
+
+            if log_wandb:
+                wandb.log({"val/loss": loss})
+                wandb.log({"val/image_accuracy": img_acc})
+                wandb.log({"val/speech_accuracy": speech_acc})
 
             pbar.set_description(
-                f"[Epoch: {epoch}] Loss: {loss:.2f} | Image Acc: {img_acc.item():.2f}% | Speech Acc: {speech_acc.item():.2f}%"
+                f"[Epoch: {epoch}] Loss: {loss:.2f} | Image Acc: {img_acc:.2f}% | Speech Acc: {speech_acc:.2f}%"
             )
 
     return {
