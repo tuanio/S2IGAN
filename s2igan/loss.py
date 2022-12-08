@@ -11,17 +11,21 @@ class MatchingLoss(nn.Module):
         super().__init__()
         self.beta = beta
         self.eps = 1e-9
+        self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, x, y, labels):
+        bs = labels.shape[0]
+
         mask = self.create_mask(labels)
         sim = self.cosine_sim(x, y)
-        filled = mask * sim
+        sim = sim + mask.log()
+        
+        diag_label = torch.autograd.Variable(torch.LongTensor(list(range(bs))))
+        diag_label.to(x.device)
+        loss_0 = self.criterion(sim, diag_label)
+        loss_1 = self.criterion(sim.T, diag_label)
 
-        loss_1 = torch.diag(sim) / filled.sum(dim=1)
-        loss_2 = torch.diag(sim) / filled.sum(dim=0)
-
-        loss = loss_1.log().sum() + loss_2.log().sum()
-        return -loss
+        return loss_0 + loss_1
 
     def create_mask(self, labels):
         mask = torch.ne(labels.view(1, -1), labels.view(-1, 1))
@@ -40,7 +44,8 @@ class MatchingLoss(nn.Module):
         den = torch.bmm(norm_x, norm_y.transpose(1, 2))
 
         sim = self.beta * (num / den.clamp(min=1e-8))
-        return sim.exp().squeeze()
+
+        return sim.squeeze()
 
 
 class DistinctiveLoss(nn.Module):
@@ -61,4 +66,4 @@ class SENLoss(nn.Module):
     def forward(self, x, y, cls_x, cls_y, labels):
         match_loss = self.matching_loss(x, y, labels)
         dist_loss = self.distinctive_loss(cls_x, cls_y, labels)
-        return match_loss, dist_loss, match_loss + dist_loss
+        return match_loss.detach(), dist_loss.detach(), match_loss + dist_loss
