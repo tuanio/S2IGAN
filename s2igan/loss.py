@@ -21,7 +21,8 @@ class MatchingLoss(nn.Module):
         sim = sim + mask.log()
         
         diag_label = torch.autograd.Variable(torch.LongTensor(list(range(bs))))
-        diag_label.to(x.device)
+        if torch.cuda.is_available():
+            diag_label = diag_label.to('cuda:0')
         loss_0 = self.criterion(sim, diag_label)
         loss_1 = self.criterion(sim.T, diag_label)
 
