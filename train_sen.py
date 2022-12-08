@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from data.dataloader import sen_collate_fn
 from omegaconf import DictConfig, OmegaConf
 from s2igan.sen import ImageEncoder, SpeechEncoder
-from s2igan.sen.utils import sen_train_epoch, sen_eval_epoch
+from s2igan.sen.utils import sen_train_epoch
 from s2igan.loss import SENLoss
 
 config_path = "conf"
@@ -106,7 +106,7 @@ def main(cfg: DictConfig):
 
     if cfg.experiment.train:
         for epoch in range(cfg.experiment.max_epoch):
-            sen_train_epoch(
+            train_result = sen_train_epoch(
                 image_encoder,
                 speech_encoder,
                 classifier,
@@ -118,34 +118,11 @@ def main(cfg: DictConfig):
                 epoch,
                 log_wandb,
             )
-            sen_eval_epoch(
-                image_encoder,
-                speech_encoder,
-                classifier,
-                test_dataloder,
-                criterion,
-                device,
-                epoch,
-                log_wandb,
-            )
-
             torch.save(
                 dict(speech_encoder_state_dict=speech_encoder.state_dict()),
                 "speech_encoder.pt",
             )
-
-    if cfg.experiment.test:
-        eval_result = sen_eval_epoch(
-            image_encoder,
-            speech_encoder,
-            classifier,
-            test_dataloder,
-            criterion,
-            device,
-            epoch,
-            log_wandb,
-        )
-        print("Eval result:", eval_result)
+    print("Train result:", train_result)
 
 
 if __name__ == "__main__":
