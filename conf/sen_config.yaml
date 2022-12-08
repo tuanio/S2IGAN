@@ -31,7 +31,7 @@ model:
   image_encoder:
     output_dim: 1024
   speech_encoder:
-    input_dim: 40
+    input_dim: ${data.general.n_mels}
     cnn_dim: [64, 128]
     kernel_size: 6
     stride: 2
