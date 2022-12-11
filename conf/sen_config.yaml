@@ -51,9 +51,6 @@ optimizer:
 
 scheduler:
   use: true
-  args:
-    pct_start: 0.2
-    max_lr: ${optimizer.lr}
 
 experiment:
   train: true

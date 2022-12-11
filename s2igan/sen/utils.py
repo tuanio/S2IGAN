@@ -9,7 +9,6 @@ def sen_train_epoch(
     classifier,
     dataloader,
     optimizer,
-    scheduler,
     criterion,
     device,
     epoch,
@@ -40,8 +39,6 @@ def sen_train_epoch(
         loss.backward()
 
         optimizer.step()
-        if scheduler:
-            scheduler.step()
 
         loss = loss.item()
         run_loss += loss
@@ -63,10 +60,6 @@ def sen_train_epoch(
             wandb.log({"train/image_accuracy": img_acc})
             wandb.log({"train/speech_accuracy": speech_acc})
             wandb.log({"train/epoch": epoch})
-            wandb.log({"train/lr-AdamW": epoch})
-
-            if scheduler:
-                wandb.log({"train/lr-AdamW": scheduler.get_last_lr()[0]})
 
         pbar.set_description(
             f"[Epoch: {epoch}] Loss: {loss:.2f} | Image Acc: {img_acc:.2f}% | Speech Acc: {speech_acc:.2f}%"
@@ -77,7 +70,6 @@ def sen_train_epoch(
         "img_acc": run_img_acc / size,
         "speech_acc": run_speech_acc / size,
     }
-
 
 
 # def sen_eval_epoch(
