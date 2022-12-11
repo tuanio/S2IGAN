@@ -101,7 +101,7 @@ def main(cfg: DictConfig):
         #     optimizer, **sched_dict, **cfg.scheduler.args
         # )
         scheduler = torch.optim.lr_scheduler.LinearLR(
-            optim,
+            optimizer,
             start_factor=1 / 3,
             end_factor=1,
             total_iters=int(0.2 * cfg.experiment.max_epoch),
