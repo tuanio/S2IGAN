@@ -2,25 +2,25 @@ data:
   general:
     input_size: 299
     n_fft: 512
-    n_mels: 40
+    n_mels: 64 
     win_length: 250
     hop_length: 100
     n_class: 103 # get from dataset externally 
-    batch_size: 4
-    num_workers: 2
+    batch_size: 18
+    num_workers: 4
   train:
-    json_file: ..\s2idata\train_flower_en2vi.json
-    img_path: ..\s2idata\image_oxford\image_oxford\train
-    audio_path: ..\s2idata\oxford_audio\oxford\train
+    json_file: /home/admin/workspace/tuan/s2igan_model/dataset/train_flower_en2vi.json
+    img_path: /home/admin/workspace/tuan/s2igan_model/dataset/image_oxford/image_oxford/train
+    audio_path: /home/admin/workspace/tuan/s2igan_model/dataset/oxford_audio/oxford/train
     input_size: ${data.general.input_size}
     n_fft: ${data.general.n_fft}
     n_mels: ${data.general.n_mels}
     win_length: ${data.general.win_length}
     hop_length: ${data.general.hop_length}
   test:
-    json_file: ..\s2idata\test_flower_en2vi.json
-    img_path: ..\s2idata\image_oxford\image_oxford\test
-    audio_path: ..\s2idata\oxford_audio\oxford\test
+    json_file: /home/admin/workspace/tuan/s2igan_model/dataset/test_flower_en2vi.json
+    img_path: /home/admin/workspace/tuan/s2igan_model/dataset/image_oxford/image_oxford/test
+    audio_path: /home/admin/workspace/tuan/s2igan_model/dataset/oxford_audio/oxford/test
     input_size: ${data.general.input_size}
     n_fft: ${data.general.n_fft}
     n_mels: ${data.general.n_mels}
@@ -32,16 +32,16 @@ model:
     output_dim: 1024
   speech_encoder:
     input_dim: ${data.general.n_mels}
-    cnn_dim: [64, 128]
+    cnn_dim: [72, 144]
     kernel_size: 6
     stride: 2
     rnn_dim: 512
     rnn_num_layers: 2
     rnn_type: gru
-    rnn_dropout: 0.1
+    rnn_dropout: 0.05
     rnn_bidirectional: True
     attn_heads: 1
-    attn_dropout: 0.1
+    attn_dropout: 0.05
   classifier:
     in_features: ${model.image_encoder.output_dim}
     out_features: ${data.general.n_class}
@@ -51,11 +51,12 @@ optimizer:
 
 scheduler:
   use: true
+  pct_start: 0.2
 
 experiment:
   train: true
   test: true
-  max_epoch: 100
+  max_epoch: 50
   log_wandb: true
 
 loss:
