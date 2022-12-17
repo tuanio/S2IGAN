@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from torchsummary import summary
 from data.dataset import SENDataset
 from torch.utils.data import DataLoader
-from data.dataloader import sen_collate_fn
+from data.data_collator import sen_collate_fn
 from omegaconf import DictConfig, OmegaConf
 from s2igan.sen import ImageEncoder, SpeechEncoder
 from s2igan.sen.utils import sen_train_epoch
@@ -42,12 +42,20 @@ def main(cfg: DictConfig):
     nn.init.xavier_uniform_(classifier.weight.data)
 
     if cfg.ckpt.image_encoder:
-        print('Loading Image Encoder state dict...')
-        print(image_encoder.load_state_dict(torch.load(cfg.ckpt.image_encoder).get('image_encoder_state_dict')))
+        print("Loading Image Encoder state dict...")
+        print(
+            image_encoder.load_state_dict(
+                torch.load(cfg.ckpt.image_encoder).get("image_encoder_state_dict")
+            )
+        )
 
     if cfg.ckpt.speech_encoder:
-        print('Loading Speech Encoder state dict...')
-        print(speech_encoder.load_state_dict(torch.load(cfg.ckpt.speech_encoder).get('speech_encoder_state_dict')))
+        print("Loading Speech Encoder state dict...")
+        print(
+            speech_encoder.load_state_dict(
+                torch.load(cfg.ckpt.speech_encoder).get("speech_encoder_state_dict")
+            )
+        )
 
     if multi_gpu:
         image_encoder = nn.DataParallel(image_encoder, device_ids=[0, 1])

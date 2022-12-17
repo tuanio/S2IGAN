@@ -7,6 +7,29 @@ import torchaudio
 from torchaudio.transforms import MelSpectrogram
 from torchvision import transforms as T
 from PIL import Image
+from collections import defaultdict
+import random
+
+
+def get_img_transform(subset, input_size):
+    return {
+        "train": T.Compose(
+            [
+                T.RandomResizedCrop(input_size),
+                T.RandomHorizontalFlip(),
+                T.ToTensor(),
+                T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            ]
+        ),
+        "test": T.Compose(
+            [
+                T.Resize(input_size),
+                T.CenterCrop(input_size),
+                T.ToTensor(),
+                T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            ]
+        ),
+    }[subset]
 
 
 class SENDataset(Dataset):
@@ -27,8 +50,8 @@ class SENDataset(Dataset):
             [
                 dict(
                     label=datum["class"],
-                    img=img_path + "/" + datum["img"],
-                    audio=audio_path + "/" + wav,
+                    img=img_path + os.sep + datum["img"],
+                    audio=audio_path + os.sep + wav,
                 )
                 for wav in datum["wav"]
             ]
@@ -39,28 +62,10 @@ class SENDataset(Dataset):
             j
             for i in walker
             for j in i
-            if os.path.exists(j["audio"]) and os.path.exists(j["img"])
         ]
         subset = json_file.rsplit(os.sep, 1)[-1].split("_", 1)[0]
 
-        self.img_transform = {
-            "train": T.Compose(
-                [
-                    T.RandomResizedCrop(input_size),
-                    T.RandomHorizontalFlip(),
-                    T.ToTensor(),
-                    T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                ]
-            ),
-            "test": T.Compose(
-                [
-                    T.Resize(input_size),
-                    T.CenterCrop(input_size),
-                    T.ToTensor(),
-                    T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                ]
-            ),
-        }[subset]
+        self.img_transform = get_img_transform(subset, input_size)
 
         sample_rate = 16000  # default value
         self.audio_transform = MelSpectrogram(
@@ -81,3 +86,78 @@ class SENDataset(Dataset):
         mel_spec = mel_spec.squeeze().permute(1, 0)  # (len, n_mels)
 
         return img, mel_spec, mel_spec.size(0), item["label"]
+
+
+class RDGDataset(Dataset):
+    def __init__(
+        self,
+        json_file: str,
+        img_path: str,
+        audio_path: str,
+        input_size=299,
+        n_fft=512,
+        n_mels=40,
+        win_length=250,
+        hop_length=100,
+    ):
+        super().__init__()
+        data = json.load(open(json_file, "r", encoding="utf-8"))["data"]
+        walker = [
+            [
+                dict(
+                    label=datum["class"],
+                    img=img_path + os.sep + datum["img"],
+                    audio=audio_path + os.sep + wav,
+                )
+                for wav in datum["wav"]
+            ]
+            for datum in data
+        ]
+        # check exits
+        self.walker = [
+            j
+            for i in walker
+            for j in i
+        ]
+        
+        self.data_class = defaultdict(list)
+        for data in self.walker:
+            self.data_class[data.get('label')].append(data)
+        
+        subset = json_file.rsplit(os.sep, 1)[-1].split("_", 1)[0]
+
+        self.img_transform = get_img_transform(subset, input_size)
+
+        sample_rate = 16000  # default value
+        self.audio_transform = MelSpectrogram(
+            sample_rate, n_fft, win_length, hop_length, n_mels=n_mels
+        )
+
+    def __len__(self):
+        return len(self.walker)
+
+    def __get_random_same_class__(self, label):
+        data = self.data_class[label]
+        l, h = 0, len(data) - 1
+        return data[random.randint(l, h)]
+
+    def __get_random_diff_class__(self, diff_label):
+        l, h = 0, len(self.data_class) - 1
+        label = random.randint(l, h)
+        while label == diff_label:
+            label = random.randint(l, h)
+        return self.__get_random_same_class__(label)
+
+    def __getitem__(self, index):
+        item = self.walker[index]
+        label = item['label']
+
+        real_img = Image.open(item["img"])
+        similar_img = Image.open(self.__get_random_same_class__(label)['img'])
+        wrong_img = Image.open(self.__get_random_diff_class__(label)['img'])
+
+        wav, sr = torchaudio.load(item["audio"])
+        mel_spec = self.audio_transform(wav)
+        mel_spec = mel_spec.squeeze().permute(1, 0)  # (len, n_mels)
+
+        return real_img, similar_img, wrong_img, mel_spec, mel_spec.size(0), label

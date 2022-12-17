@@ -1,0 +1,42 @@
+{
+    "os": "Windows-10-10.0.22621-SP0",
+    "python": "3.9.12",
+    "heartbeatAt": "2022-12-17T13:50:59.912791",
+    "startedAt": "2022-12-17T13:50:58.859385",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "C:\\D\\Study\\hk7\\computer vision\\S2IGAN\\train_rdg.py",
+    "codePath": "train_rdg.py",
+    "git": {
+        "remote": "https://github.com/tuanio/speech2image-gan.git",
+        "commit": "b7442c7d9d22d738c024ede581d6af157336526b"
+    },
+    "email": "nvatuan3@gmail.com",
+    "root": "C:/D/Study/hk7/computer vision/S2IGAN",
+    "host": "DESKTOP-BA6OO77",
+    "username": "nvatu",
+    "executable": "C:\\D\\Study\\hk7\\computer vision\\S2IGAN\\venv\\Scripts\\python.exe",
+    "cpu_count": 4,
+    "cpu_count_logical": 8,
+    "cpu_freq": {
+        "current": 1300.0,
+        "min": 0.0,
+        "max": 1501.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 1300.0,
+            "min": 0.0,
+            "max": 1501.0
+        }
+    ],
+    "disk": {
+        "total": 275.62890243530273,
+        "used": 263.8374366760254
+    },
+    "memory": {
+        "total": 7.810337066650391
+    }
+}

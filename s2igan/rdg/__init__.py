@@ -4,3 +4,4 @@ from .discriminator import (
     DiscriminatorFor128By128,
     DiscriminatorFor256By256,
 )
+from .relation_supervisor import RelationClassifier
