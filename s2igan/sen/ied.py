@@ -30,4 +30,5 @@ class ImageEncoder(nn.Module):
         img: (-1, 3, 299, 299)
         out: (-1, output_dim)
         """
-        return self.model(img)
+        out = self.model(img)
+        return nn.functional.normalize(out, p=2, dim=1)

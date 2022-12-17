@@ -39,6 +39,7 @@ def main(cfg: DictConfig):
     image_encoder = ImageEncoder(**cfg.model.image_encoder)
     speech_encoder = SpeechEncoder(**cfg.model.speech_encoder)
     classifier = nn.Linear(**cfg.model.classifier)
+    nn.init.xavier_uniform(classifier.weight.data)
 
     if multi_gpu:
         image_encoder = nn.DataParallel(image_encoder, device_ids=[0, 1])
@@ -132,6 +133,10 @@ def main(cfg: DictConfig):
 
             torch.save(
                 dict(speech_encoder_state_dict=speech_encoder.state_dict()),
+                "speech_encoder.pt",
+            )
+            torch.save(
+                dict(image_encoder_state_dict=speech_encoder.state_dict()),
                 "speech_encoder.pt",
             )
     print("Train result:", train_result)

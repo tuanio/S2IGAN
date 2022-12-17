@@ -2,7 +2,7 @@ data:
   general:
     input_size: 299
     n_fft: 512
-    n_mels: 64 
+    n_mels: 40
     win_length: 250
     hop_length: 100
     n_class: 103 # get from dataset externally 
@@ -32,22 +32,22 @@ model:
     output_dim: 1024
   speech_encoder:
     input_dim: ${data.general.n_mels}
-    cnn_dim: [72, 144]
+    cnn_dim: [64, 128]
     kernel_size: 6
     stride: 2
     rnn_dim: 512
     rnn_num_layers: 2
     rnn_type: gru
-    rnn_dropout: 0.05
+    rnn_dropout: 0.1
     rnn_bidirectional: True
     attn_heads: 1
-    attn_dropout: 0.05
+    attn_dropout: 0.1
   classifier:
     in_features: ${model.image_encoder.output_dim}
     out_features: ${data.general.n_class}
 
 optimizer:
-  lr: 0.001
+  lr: 0.0005
 
 scheduler:
   use: true
@@ -56,7 +56,7 @@ scheduler:
 experiment:
   train: true
   test: true
-  max_epoch: 50
+  max_epoch: 30
   log_wandb: true
 
 loss:
