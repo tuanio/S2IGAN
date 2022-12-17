@@ -5,8 +5,8 @@ from torch import nn
 class MatchingLoss(nn.Module):
     def __init__(self, beta: float = 10):
         """
-            from this paper: https://arxiv.org/abs/1711.10485
-            beta is gamma_3
+        from this paper: https://arxiv.org/abs/1711.10485
+        beta is gamma_3
         """
         super().__init__()
         self.beta = beta

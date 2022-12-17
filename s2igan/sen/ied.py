@@ -6,7 +6,7 @@ from s2igan.utils import set_non_grad
 
 class ImageEncoder(nn.Module):
     """
-        image encoder pretrained on imagenet
+    image encoder pretrained on imagenet
     """
 
     def __init__(self, output_dim: int = 1024):
@@ -27,7 +27,7 @@ class ImageEncoder(nn.Module):
 
     def forward(self, img):
         """
-            img: (-1, 3, 299, 299)
-            out: (-1, output_dim)
+        img: (-1, 3, 299, 299)
+        out: (-1, output_dim)
         """
         return self.model(img)

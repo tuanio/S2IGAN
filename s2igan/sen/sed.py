@@ -54,8 +54,8 @@ class SpeechEncoder(nn.Module):
 
     def forward(self, mel_spec, mel_spec_len):
         """
-            mel_spec (-1, 40, len)
-            output (-1, len, rnn_dim * (int(bidirectional) + 1))
+        mel_spec (-1, 40, len)
+        output (-1, len, rnn_dim * (int(bidirectional) + 1))
         """
         cnn_out = self.cnn(mel_spec)
 
