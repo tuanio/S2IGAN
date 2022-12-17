@@ -39,7 +39,15 @@ def main(cfg: DictConfig):
     image_encoder = ImageEncoder(**cfg.model.image_encoder)
     speech_encoder = SpeechEncoder(**cfg.model.speech_encoder)
     classifier = nn.Linear(**cfg.model.classifier)
-    nn.init.xavier_uniform(classifier.weight.data)
+    nn.init.xavier_uniform_(classifier.weight.data)
+
+    if cfg.ckpt.image_encoder:
+        print('Loading Image Encoder state dict...')
+        print(image_encoder.load_state_dict(torch.load(cfg.ckpt.image_encoder).get('image_encoder_state_dict')))
+
+    if cfg.ckpt.speech_encoder:
+        print('Loading Speech Encoder state dict...')
+        print(speech_encoder.load_state_dict(torch.load(cfg.ckpt.speech_encoder).get('speech_encoder_state_dict')))
 
     if multi_gpu:
         image_encoder = nn.DataParallel(image_encoder, device_ids=[0, 1])

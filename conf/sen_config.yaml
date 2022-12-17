@@ -61,3 +61,7 @@ experiment:
 
 loss:
   beta: 10
+
+ckpt:
+  speech_encoder: null
+  image_encoder: null
