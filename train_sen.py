@@ -93,20 +93,20 @@ def main(cfg: DictConfig):
     optimizer = torch.optim.AdamW(model_params, **cfg.optimizer)
     scheduler = None
     if cfg.scheduler.use:
-        # steps_per_epoch = len(train_dataloader)
-        # sched_dict = dict(
-        #     epochs=cfg.experiment.max_epoch, steps_per_epoch=steps_per_epoch
-        # )
-        # scheduler = torch.optim.lr_scheduler.LinearLR(
-        #     optimizer, **sched_dict, **cfg.scheduler.args
-        # )
-        scheduler = torch.optim.lr_scheduler.LinearLR(
-            optimizer,
-            start_factor=1 / 3,
-            end_factor=1,
-            total_iters=int(0.2 * cfg.experiment.max_epoch),
-            verbose=True,
+        steps_per_epoch = len(train_dataloader)
+        sched_dict = dict(
+            epochs=cfg.experiment.max_epoch,
+            steps_per_epoch=steps_per_epoch,
+            max_lr=cfg.optimizer.lr
         )
+        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, **sched_dict)
+        # scheduler = torch.optim.lr_scheduler.LinearLR(
+        #     optimizer,
+        #     start_factor=1 / 3,
+        #     end_factor=1,
+        #     total_iters=int(0.2 * cfg.experiment.max_epoch),
+        #     verbose=True,
+        # )
     criterion = SENLoss(**cfg.loss).to(device)
 
     log_wandb = cfg.experiment.log_wandb
@@ -119,14 +119,15 @@ def main(cfg: DictConfig):
                 classifier,
                 train_dataloader,
                 optimizer,
+                scheduler,
                 criterion,
                 device,
                 epoch,
                 log_wandb,
             )
-            if scheduler:
-                scheduler.step()
-                wandb.log({"train/lr-LinearLR": scheduler.get_last_lr()[0]})
+            # if scheduler:
+            #     scheduler.step()
+            #     wandb.log({"train/lr-LinearLR": scheduler.get_last_lr()[0]})
 
             torch.save(
                 dict(speech_encoder_state_dict=speech_encoder.state_dict()),
