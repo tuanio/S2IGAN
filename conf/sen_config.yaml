@@ -6,7 +6,7 @@ data:
     win_length: 250
     hop_length: 100
     n_class: 103 # get from dataset externally 
-    batch_size: 18
+    batch_size: 20
     num_workers: 4
   train:
     json_file: /home/admin/workspace/tuan/s2igan_model/dataset/train_flower_en2vi.json
