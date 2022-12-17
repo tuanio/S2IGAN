@@ -99,7 +99,7 @@ def main(cfg: DictConfig):
             epochs=cfg.experiment.max_epoch,
             steps_per_epoch=steps_per_epoch,
             max_lr=cfg.optimizer.lr,
-            pct_start=cfg.scheduler.pct_start
+            pct_start=cfg.scheduler.pct_start,
         )
         scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, **sched_dict)
         # scheduler = torch.optim.lr_scheduler.LinearLR(
@@ -136,8 +136,8 @@ def main(cfg: DictConfig):
                 "speech_encoder.pt",
             )
             torch.save(
-                dict(image_encoder_state_dict=speech_encoder.state_dict()),
-                "speech_encoder.pt",
+                dict(image_encoder_state_dict=image_encoder.state_dict()),
+                "image_encoder.pt",
             )
     print("Train result:", train_result)
 

@@ -56,7 +56,7 @@ scheduler:
 experiment:
   train: true
   test: true
-  max_epoch: 30
+  max_epoch: 50
   log_wandb: true
 
 loss:

@@ -26,22 +26,10 @@ class DownScale16TimesBlock(nn.Module):
     def __init__(self, disc_dim: int):
         super().__init__()
         self.seq = nn.Sequential(
-            nn.Conv2d(
-                3,
-                disc_dim,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            ),
+            nn.Conv2d(3, disc_dim, kernel_size=4, stride=2, padding=1, bias=False,),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(
-                disc_dim,
-                disc_dim * 2,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
+                disc_dim, disc_dim * 2, kernel_size=4, stride=2, padding=1, bias=False,
             ),
             nn.BatchNorm2d(disc_dim * 2),
             nn.LeakyReLU(0.2, inplace=True),
