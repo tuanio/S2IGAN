@@ -171,14 +171,7 @@ class ImageGenerator(nn.Module):
     def __init__(self, gen_dim: int):
         super().__init__()
         self.img = nn.Sequential(
-            nn.Conv2d(
-                gen_dim,
-                3,
-                kernel_size=3,
-                stride=1,
-                padding=1,
-                bias=False,
-            ),
+            nn.Conv2d(gen_dim, 3, kernel_size=3, stride=1, padding=1, bias=False,),
             nn.Tanh(),
         )
 

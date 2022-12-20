@@ -58,18 +58,10 @@ def main(cfg: DictConfig):
 
     if cfg.ckpt.image_encoder:
         print("Loading Image Encoder state dict...")
-        print(
-            image_encoder.load_state_dict(
-                torch.load(cfg.ckpt.image_encoder).get("image_encoder_state_dict")
-            )
-        )
+        print(image_encoder.load_state_dict(torch.load(cfg.ckpt.image_encoder)))
     if cfg.ckpt.speech_encoder:
         print("Loading Speech Encoder state dict...")
-        print(
-            speech_encoder.load_state_dict(
-                torch.load(cfg.ckpt.speech_encoder).get("speech_encoder_state_dict")
-            )
-        )
+        print(speech_encoder.load_state_dict(torch.load(cfg.ckpt.speech_encoder)))
         set_non_grad(image_encoder)
         set_non_grad(speech_encoder)
 
@@ -119,8 +111,8 @@ def main(cfg: DictConfig):
 
     optimizer_generator = torch.optim.AdamW(generator.parameters(), **cfg.optimizer)
     optimizer_discrminator = {
-        img_dim: torch.optim.AdamW(discriminators[img_dim], **cfg.optimizer)
-        for key, model in discriminators.keys()
+        key: torch.optim.AdamW(discriminators[key].parameters(), **cfg.optimizer)
+        for key in discriminators.keys()
     }
     optimizer_rs = torch.optim.AdamW(relation_classifier.parameters(), **cfg.optimizer)
     optimizers = {
@@ -139,8 +131,8 @@ def main(cfg: DictConfig):
     schedulers = {
         "gen": torch.optim.lr_scheduler.OneCycleLR(optimizer_generator, **sched_dict),
         "disc": {
-            img_dim: torch.optim.lr_scheduler.OneCycleLR(
-                optimizer_discrminator[img_dim], **cfg.optimizer
+            key: torch.optim.lr_scheduler.OneCycleLR(
+                optimizer_discrminator[key], **sched_dict
             )
             for key in discriminators.keys()
         },
@@ -169,6 +161,7 @@ def main(cfg: DictConfig):
                 epoch,
                 log_wandb,
             )
+    print("Train result:", train_result)
 
 
 if __name__ == "__main__":

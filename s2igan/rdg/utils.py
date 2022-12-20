@@ -2,7 +2,6 @@ import torch
 from tqdm import tqdm
 
 import wandb
-
 from torchvision import transforms as T
 
 
@@ -13,19 +12,21 @@ def get_transform(img_dim):
 Resizer = {64: get_transform(64), 128: get_transform(128), 256: get_transform(256)}
 
 
-def update_D(models, optimizers, schedulers, criterion, specific_params, device):
-    original_real_img, origin_similar_img, original_wrong_img, spec, spec_len = batch
+def update_D(
+    models, batch, optimizers, schedulers, criterions, specific_params, device
+):
+    origin_real_img, origin_similar_img, origin_wrong_img, spec, spec_len = batch
 
     real_imgs, wrong_imgs, similar_imgs = {}, {}, {}
     for img_dim in specific_params.img_dims:
-        real_imgs[img_dim] = Resizer[img_dim](original_real_img)
-        wrong_imgs[img_dim] = Resizer[img_dim](original_wrong_img)
+        real_imgs[img_dim] = Resizer[img_dim](origin_real_img)
+        wrong_imgs[img_dim] = Resizer[img_dim](origin_wrong_img)
         similar_imgs[img_dim] = Resizer[img_dim](origin_similar_img)
 
-    for key in optimizers["disc"].keys():
-        optimizers["disc"][key].zero_grad()
+    for key in optimizers.keys():
+        optimizers[key].zero_grad()
 
-    bs = original_real_img.size(0)
+    bs = origin_real_img.size(0)
 
     Z = torch.randn(bs, specific_params.latent_space_dim, device=device)
     A = models["sed"](spec, spec_len)
@@ -38,7 +39,7 @@ def update_D(models, optimizers, schedulers, criterion, specific_params, device)
 
     D_loss = 0
     for img_dim in specific_params.img_dims:
-        optimizers["disc"][img_dim].zero_grad()
+        optimizers[img_dim].zero_grad()
 
         real_img = real_imgs[img_dim]
         wrong_img = wrong_imgs[img_dim]
@@ -65,26 +66,28 @@ def update_D(models, optimizers, schedulers, criterion, specific_params, device)
             + loss_wrong_uncond
         )
         curr_D_loss.backward()
-        optimizers["disc"][img_dim].step()
-        schedulers["disc"][img_dim].step()
+        optimizers[img_dim].step()
+        schedulers[img_dim].step()
 
         D_loss += curr_D_loss.detach().item()
 
-    return {"D_loss": D_loss}
+    return D_loss
 
 
-def update_RS(models, optimizers, schedulers, criterion, specific_params, device):
-    original_real_img, origin_similar_img, original_wrong_img, spec, spec_len = batch
+def update_RS(
+    models, batch, optimizers, schedulers, criterions, specific_params, device
+):
+    origin_real_img, origin_similar_img, origin_wrong_img, spec, spec_len = batch
 
     real_imgs, wrong_imgs, similar_imgs = {}, {}, {}
     for img_dim in specific_params.img_dims:
-        real_imgs[img_dim] = Resizer[img_dim](original_real_img)
-        wrong_imgs[img_dim] = Resizer[img_dim](original_wrong_img)
+        real_imgs[img_dim] = Resizer[img_dim](origin_real_img)
+        wrong_imgs[img_dim] = Resizer[img_dim](origin_wrong_img)
         similar_imgs[img_dim] = Resizer[img_dim](origin_similar_img)
 
-    optimizers["rs"].zero_grad()
+    optimizers.zero_grad()
 
-    bs = original_real_img.size(0)
+    bs = origin_real_img.size(0)
 
     Z = torch.randn(bs, specific_params.latent_space_dim, device=device)
     A = models["sed"](spec, spec_len)
@@ -97,7 +100,7 @@ def update_RS(models, optimizers, schedulers, criterion, specific_params, device
 
     real_img = Resizer[256](origin_real_img)
     similar_img = Resizer[256](origin_similar_img)
-    wrong_img = Resizer[256](original_wrong_img)
+    wrong_img = Resizer[256](origin_wrong_img)
 
     real_feat = models["ied"](real_img)
     similar_feat = models["ied"](similar_img)
@@ -109,27 +112,32 @@ def update_RS(models, optimizers, schedulers, criterion, specific_params, device
     R3 = models["rs"](real_feat.detach(), real_feat.detach())
     R_GT_FI = models["rs"](fake_feat.detach(), real_feat.detach())
 
-    rs_loss = criterions["rs"](R1, R2, R3, R_GT_FI, zero_labels, one_labels, two_labels)
+    RS_loss = criterions["rs"](R1, R2, R3, R_GT_FI, zero_labels, one_labels, two_labels)
 
-    rs_loss.backward()
-    optimizers["rs"].step()
-    schedulers["rs"].step()
+    RS_loss.backward()
+    optimizers.step()
+    schedulers.step()
 
-    return {"RS_loss": rs_loss.detach().item()}
+    return RS_loss.detach().item()
 
 
-def update_G(models, optimizers, schedulers, criterion, specific_params, device):
-    original_real_img, origin_similar_img, original_wrong_img, spec, spec_len = batch
+def update_G(models, batch, optimizers, schedulers, criterion, specific_params, device):
+    origin_real_img, origin_similar_img, origin_wrong_img, spec, spec_len = batch
 
     real_imgs, wrong_imgs, similar_imgs = {}, {}, {}
     for img_dim in specific_params.img_dims:
-        real_imgs[img_dim] = Resizer[img_dim](original_real_img)
-        wrong_imgs[img_dim] = Resizer[img_dim](original_wrong_img)
+        real_imgs[img_dim] = Resizer[img_dim](origin_real_img)
+        wrong_imgs[img_dim] = Resizer[img_dim](origin_wrong_img)
         similar_imgs[img_dim] = Resizer[img_dim](origin_similar_img)
 
-    optimizers["gen"].zero_grad()
+    optimizers.zero_grad()
 
-    bs = original_real_img.size(0)
+    bs = origin_real_img.size(0)
+
+    Z = torch.randn(bs, specific_params.latent_space_dim, device=device)
+    A = models["sed"](spec, spec_len)
+
+    fake_imgs, mu, logvar = models["gen"](Z, A)
 
     zero_labels = torch.zeros(bs, device=device, dtype=torch.float)
     one_labels = torch.ones(bs, device=device, dtype=torch.float)
@@ -154,10 +162,10 @@ def update_G(models, optimizers, schedulers, criterion, specific_params, device)
 
     G_loss += criterion["kl"](mu, logvar) * specific_params.kl_loss_coef
     G_loss.backward()
-    optimizers["gen"].step()
-    schedulers["gen"].step()
+    optimizers.step()
+    schedulers.step()
 
-    return {"G_loss": G_loss.detach().item()}
+    return G_loss.detach().item()
 
 
 def rdg_train_epoch(
@@ -174,19 +182,19 @@ def rdg_train_epoch(
     size = len(dataloader)
     pbar = tqdm(dataloader, total=size)
     for (
-        original_real_img,
+        origin_real_img,
         origin_similar_img,
-        original_wrong_img,
+        origin_wrong_img,
         spec,
         spec_len,
     ) in pbar:
-        # original_real_img, origin_similar_img, original_wrong_img, spec, spec_len
+        # origin_real_img, origin_similar_img, origin_wrong_img, spec, spec_len
         batch = (
-            original_real_img.to(device),
+            origin_real_img.to(device),
             origin_similar_img.to(device),
-            original_wrong_img.to(device),
+            origin_wrong_img.to(device),
             spec.to(device),
-            spec_len.to(device),
+            spec_len.to(device)
         )
 
         D_loss = update_D(
@@ -194,7 +202,7 @@ def rdg_train_epoch(
             batch,
             optimizers["disc"],
             schedulers["disc"],
-            criterion,
+            criterions,
             specific_params,
             device,
         )
@@ -203,7 +211,7 @@ def rdg_train_epoch(
             batch,
             optimizers["rs"],
             schedulers["rs"],
-            criterion,
+            criterions,
             specific_params,
             device,
         )
@@ -212,15 +220,15 @@ def rdg_train_epoch(
             batch,
             optimizers["gen"],
             schedulers["gen"],
-            criterion,
+            criterions,
             specific_params,
             device,
         )
 
         if log_wandb:
-            wandb.log({"train/G_loss": G_loss.item()})
-            wandb.log({"train/D_loss": D_loss.item()})
-            wandb.log({"train/RS_loss": RS_loss.item()})
+            wandb.log({"train/G_loss": G_loss})
+            wandb.log({"train/D_loss": D_loss})
+            wandb.log({"train/RS_loss": RS_loss})
             wandb.log({"train/epoch": epoch})
             wandb.log({"train/lr-OneCycleLR_G": schedulers["gen"].get_last_lr()[0]})
 
