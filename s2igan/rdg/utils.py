@@ -6,11 +6,12 @@ import wandb
 from torchvision import transforms as T
 
 
-Resizer = {
-    64: T.Resize(64),
-    128: T.Resize(128),
-    256: T.Resize(256)
-}
+def get_transform(img_dim):
+    return T.Compose([T.Resize(img_dim), T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+
+Resizer = {64: get_transform(64), 128: get_transform(128), 256: get_transform(256)}
+
 
 def rdg_train_epoch(
     models,
@@ -25,7 +26,13 @@ def rdg_train_epoch(
 ):
     size = len(dataloader)
     pbar = tqdm(dataloader, total=size)
-    for (original_real_img, origin_similar_img, original_wrong_img, spec, spec_len) in pbar:
+    for (
+        original_real_img,
+        origin_similar_img,
+        original_wrong_img,
+        spec,
+        spec_len,
+    ) in pbar:
         original_real_img, origin_similar_img, original_wrong_img, spec, spec_len = (
             original_real_img.to(device),
             origin_similar_img.to(device),
@@ -67,7 +74,7 @@ def rdg_train_epoch(
 
             real_out = models[disc_name](real_img, mu.detach())
             wrong_out = models[disc_name](wrong_img, mu.detach())
-            fake_out = models[disc_name](fake_imgs[img_dim], mu.detach())
+            fake_out = models[disc_name](fake_imgs[img_dim].detach(), mu.detach())
 
             loss_real_cond = criterions["bce"](real_out["cond"], one_labels)
             loss_real_uncond = criterions["bce"](real_out["uncond"], one_labels)
@@ -80,20 +87,19 @@ def rdg_train_epoch(
 
             disc_loss += (
                 loss_real_cond
+                + loss_real_uncond
+                + loss_fake_cond
                 + loss_fake_uncond
                 + loss_wrong_cond
                 + loss_wrong_uncond
-                + loss_fake_cond
-                + loss_fake_uncond
             )
 
-        disc_loss.backward(retain_graph=True)
+        disc_loss.backward()
         optimizers["disc"].step()
         schedulers["disc"].step()
 
         # ---- Update G and RS
         # --- RS
-        
 
         real_img = real_imgs[256]
         similar_img = similar_imgs[256]
@@ -101,7 +107,7 @@ def rdg_train_epoch(
 
         real_feat = models["ied"](real_img)
         similar_feat = models["ied"](similar_img)
-        fake_feat = models["ied"](fake_imgs[256])
+        fake_feat = models["ied"](fake_imgs[256].detach())
         wrong_feat = models["ied"](wrong_img)
 
         R1 = models["rs"](similar_feat, real_feat)
@@ -114,15 +120,17 @@ def rdg_train_epoch(
             R1, R2, R3, R_GT_FI, zero_labels, one_labels, two_labels
         )
 
+        rs_loss.backward()
+
         # --- G
         gen_loss = 0
         for img_dim in specific_params.img_dims:
             disc_name = f"disc_{img_dim}"
             fake_out = models[disc_name](fake_imgs[img_dim], mu.detach())
-            gen_loss = criterions["bce"](fake_out["cond"], one_labels)
+            gen_loss += criterions["bce"](fake_out["cond"], one_labels)
             gen_loss += criterions["bce"](fake_out["uncond"], one_labels)
 
-        gen_loss += criterions["kl"](mu, logvar) * specific_params.kl_loss_coef + rs_loss
+        gen_loss += criterions["kl"](mu, logvar) * specific_params.kl_loss_coef
         gen_loss.backward()
         optimizers["gen"].step()
         schedulers["gen"].step()
@@ -130,10 +138,11 @@ def rdg_train_epoch(
         if log_wandb:
             wandb.log({"train/G_loss": gen_loss.item()})
             wandb.log({"train/D_loss": disc_loss.item()})
+            wandb.log({"train/RS_loss": rs_loss.item()})
             wandb.log({"train/epoch": epoch})
-            wandb.log({"train/lr-OneCycleLR_G": scheduler["gen"].get_last_lr()[0]})
-            wandb.log({"train/lr-OneCycleLR_D": scheduler["disc"].get_last_lr()[0]})
+            wandb.log({"train/lr-OneCycleLR_G": schedulers["gen"].get_last_lr()[0]})
+            wandb.log({"train/lr-OneCycleLR_D": schedulers["disc"].get_last_lr()[0]})
 
         pbar.set_description(
-            f"[Epoch: {epoch}] G_Loss: {gen_loss.item():.2f} | D_Loss: {gen_loss.item():.2f}"
+            f"[Epoch: {epoch}] G_Loss: {gen_loss.item():.2f} | D_Loss: {disc_loss.item():.2f}"
         )

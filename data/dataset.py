@@ -12,27 +12,6 @@ from torchaudio.transforms import MelSpectrogram
 from torchvision import transforms as T
 
 
-def get_img_transform(subset, input_size):
-    return {
-        "train": T.Compose(
-            [
-                T.RandomResizedCrop(input_size),
-                T.RandomHorizontalFlip(),
-                T.ToTensor(),
-                T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-            ]
-        ),
-        "test": T.Compose(
-            [
-                T.Resize(input_size),
-                T.CenterCrop(input_size),
-                T.ToTensor(),
-                T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-            ]
-        ),
-    }[subset]
-
-
 class SENDataset(Dataset):
     def __init__(
         self,
@@ -62,7 +41,13 @@ class SENDataset(Dataset):
         self.walker = [j for i in walker for j in i]
         subset = json_file.rsplit(os.sep, 1)[-1].split("_", 1)[0]
 
-        self.img_transform = get_img_transform(subset, input_size)
+        self.img_transform = T.Compose(
+            [
+                T.ToTensor(),
+                T.Resize((input_size, input_size)),
+                T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            ]
+        )
 
         sample_rate = 16000  # default value
         self.audio_transform = MelSpectrogram(
@@ -116,10 +101,16 @@ class RDGDataset(Dataset):
         self.data_class = defaultdict(list)
         for data in self.walker:
             self.data_class[data.get("label")].append(data)
-        
+
         subset = json_file.rsplit(os.sep, 1)[-1].split("_", 1)[0]
 
-        self.img_transform = get_img_transform(subset, input_size)
+        self.img_transform = T.Compose(
+            [
+                T.ToTensor(),
+                T.Resize((input_size, input_size)),
+                T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            ]
+        )
 
         sample_rate = 16000  # default value
         self.audio_transform = MelSpectrogram(
@@ -131,11 +122,11 @@ class RDGDataset(Dataset):
 
     def __get_random_same_class__(self, label):
         data = self.data_class[label]
-        l, h = 0, len(data) - 1
+        l, h = 1, 102
         return data[random.randint(l, h)]
 
     def __get_random_diff_class__(self, diff_label):
-        l, h = 0, len(self.data_class) - 1
+        l, h = 1, 102
         label = random.randint(l, h)
         while label == diff_label:
             label = random.randint(l, h)
@@ -143,7 +134,7 @@ class RDGDataset(Dataset):
 
     def __getitem__(self, index):
         item = self.walker[index]
-        label = item['label']
+        label = item["label"]
 
         real_img = Image.open(item["img"])
         similar_img = Image.open(self.__get_random_same_class__(label)["img"])

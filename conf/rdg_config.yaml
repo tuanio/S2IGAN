@@ -6,21 +6,21 @@ data:
     win_length: 250
     hop_length: 100
     n_class: 103 # get from dataset externally 
-    batch_size: 2
-    num_workers: 0
+    batch_size: 20
+    num_workers: 12
   train:
-    json_file: sample_data\train_flower_en2vi.json
-    img_path: sample_data\img
-    audio_path: sample_data\audio
+    json_file: /home/admin/workspace/tuan/s2igan_model/dataset/train_flower_en2vi.json
+    img_path: /home/admin/workspace/tuan/s2igan_model/dataset/image_oxford/image_oxford
+    audio_path: /home/admin/workspace/tuan/s2igan_model/dataset/oxford_audio/oxford
     input_size: ${data.general.input_size}
     n_fft: ${data.general.n_fft}
     n_mels: ${data.general.n_mels}
     win_length: ${data.general.win_length}
     hop_length: ${data.general.hop_length}
   test:
-    json_file: sample_data\train_flower_en2vi.json
-    img_path: sample_data\img
-    audio_path: sample_data\audio
+    json_file: /home/admin/workspace/tuan/s2igan_model/dataset/test_flower_en2vi.json
+    img_path: /home/admin/workspace/tuan/s2igan_model/dataset/image_oxford/image_oxford
+    audio_path: /home/admin/workspace/tuan/s2igan_model/dataset/oxford_audio/oxford
     input_size: ${data.general.input_size}
     n_fft: ${data.general.n_fft}
     n_mels: ${data.general.n_mels}
@@ -56,7 +56,7 @@ model:
   
 
 optimizer:
-  lr: 0.0002
+  lr: 0.00005
 
 scheduler:
   use: true
@@ -65,8 +65,8 @@ scheduler:
 experiment:
   train: true
   test: true
-  max_epoch: 100
-  log_wandb: false
+  max_epoch: 50
+  log_wandb: true
   specific_params:
     latent_space_dim: ${model.generator.latent_space_dim}
     img_dims:
@@ -79,5 +79,5 @@ loss:
   beta: 10
 
 ckpt:
-  speech_encoder: null
-  image_encoder: null
+  speech_encoder: ckpt/speech_encoder.pt
+  image_encoder: ckpt/image_encoder.pt

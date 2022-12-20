@@ -28,7 +28,8 @@ class ConditioningAugmentationNetwork(nn.Module):
         std = torch.exp(logvar.mul(0.5))
         z = torch.randn(std.size()).to(x.device)
         z_ca = mu + std * z
-        return z_ca, mu, logvar 
+        return z_ca, mu, logvar
+
 
 class Interpolate(nn.Module):
     def __init__(self, scale_factor, mode, size=None):
@@ -39,7 +40,9 @@ class Interpolate(nn.Module):
         self.size = size
 
     def forward(self, x):
-        return self.interp(x, scale_factor=self.scale_factor, mode=self.mode, size=self.size)
+        return self.interp(
+            x, scale_factor=self.scale_factor, mode=self.mode, size=self.size
+        )
 
 
 class UpBlock(nn.Module):
@@ -56,7 +59,7 @@ class UpBlock(nn.Module):
                 bias=False,
             ),
             nn.BatchNorm2d(out_channels * 2),
-            nn.GLU(dim=1)
+            nn.GLU(dim=1),
         )
 
     def forward(self, x):
@@ -64,13 +67,15 @@ class UpBlock(nn.Module):
         x = self.seq(x)
         return x
 
+
 class Block(nn.Module):
     def __init__(self, desc):
         super().__init__()
         self.desc = desc
-    
+
     def forward(self, x):
         return x
+
 
 class InitStateGenerator(nn.Module):
     def __init__(self, in_dim: int, gen_dim: int):
