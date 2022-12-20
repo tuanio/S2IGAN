@@ -165,7 +165,7 @@ def update_G(models, batch, optimizers, schedulers, criterion, specific_params, 
     optimizers.step()
     schedulers.step()
 
-    return G_loss.detach().item()
+    return G_loss.detach().item(), fake_imgs[256].detach(), real_img[256].detach()
 
 
 def rdg_train_epoch(
@@ -215,7 +215,7 @@ def rdg_train_epoch(
             specific_params,
             device,
         )
-        G_loss = update_G(
+        G_loss, fake_img, real_img = update_G(
             models,
             batch,
             optimizers["gen"],
@@ -225,11 +225,15 @@ def rdg_train_epoch(
             device,
         )
 
+        real_img = real_img * 0.5 + 0.5
+        fake_img = fake_img * 0.5 + 0.5
+
         if log_wandb:
             wandb.log({"train/G_loss": G_loss})
             wandb.log({"train/D_loss": D_loss})
             wandb.log({"train/RS_loss": RS_loss})
             wandb.log({"train/epoch": epoch})
+            wandb.log({"train/images": wandb.Image(torch.cat((real_img, fake_img), 0))})
             wandb.log({"train/lr-OneCycleLR_G": schedulers["gen"].get_last_lr()[0]})
 
         pbar.set_description(
