@@ -148,6 +148,7 @@ def main(cfg: DictConfig):
         "bce": nn.BCELoss().to(device),
     }
 
+    log_wandb = cfg.experiment.log_wandb
     specific_params = cfg.experiment.specific_params
     if cfg.experiment.train:
         for epoch in range(cfg.experiment.max_epoch):
