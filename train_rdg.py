@@ -151,6 +151,7 @@ def main(cfg: DictConfig):
         "kl": KLDivergenceLoss().to(device),
         "rs": RSLoss().to(device),
         "bce": nn.BCELoss().to(device),
+        "ce": nn.CrossEntropyLoss().to(device),
     }
 
     log_wandb = cfg.experiment.log_wandb
