@@ -6,21 +6,21 @@ data:
     win_length: 250
     hop_length: 100
     n_class: 103 # get from dataset externally 
-    batch_size: 10
-    num_workers: 12
+    batch_size: 2
+    num_workers: 0
   train:
-    json_file: /home/admin/workspace/tuan/s2igan_model/dataset/train_flower_en2vi.json
-    img_path: /home/admin/workspace/tuan/s2igan_model/dataset/image_oxford/image_oxford/train
-    audio_path: /home/admin/workspace/tuan/s2igan_model/dataset/oxford_audio/oxford/train
+    json_file: sample_data\train_flower_en2vi.json
+    img_path: sample_data\img
+    audio_path: sample_data\audio
     input_size: ${data.general.input_size}
     n_fft: ${data.general.n_fft}
     n_mels: ${data.general.n_mels}
     win_length: ${data.general.win_length}
     hop_length: ${data.general.hop_length}
   test:
-    json_file: /home/admin/workspace/tuan/s2igan_model/dataset/test_flower_en2vi.json
-    img_path: /home/admin/workspace/tuan/s2igan_model/dataset/image_oxford/image_oxford/test
-    audio_path: /home/admin/workspace/tuan/s2igan_model/dataset/oxford_audio/oxford/test
+    json_file: sample_data\train_flower_en2vi.json
+    img_path: sample_data\img
+    audio_path: sample_data\audio
     input_size: ${data.general.input_size}
     n_fft: ${data.general.n_fft}
     n_mels: ${data.general.n_mels}
@@ -37,7 +37,7 @@ model:
     disc_dim: 64
     gan_emb_dim: ${model.generator.gan_emb_dim}
   relation_classifier:
-    inp_dim: 1024
+    inp_dim: 2048
     hid_dim: 128
   image_encoder:
     output_dim: 1024

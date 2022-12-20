@@ -88,8 +88,8 @@ class RSLoss(nn.Module):
 
     def forward(self, R1, R2, R3, R_GT_FI, zero_labels, one_labels, two_labels):
         return (
-            self.crit(R1, one_labels)
-            + self.crit(R2, zero_labels)
-            + self.crit(R3, zero_labels)
-            + self.crit(R_GT_FI, two_labels)
+            self.crit(R1, one_labels.long())
+            + self.crit(R2, zero_labels.long())
+            + self.crit(R3, zero_labels.long())
+            + self.crit(R_GT_FI, two_labels.long())
         )

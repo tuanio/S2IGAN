@@ -16,27 +16,37 @@ class ConditioningAugmentationNetwork(nn.Module):
         # multiply by 2 if leaky relu
         # multiply by 4 if GLU
         # self.act = nn.LeakyReLU(negative_slope)
-        self.act = nn.GLU()
+        self.act = nn.GLU(dim=1)
 
     def forward(self, x):
         """
         x: speech embedding vector
         """
         x = self.act(self.fc(x))
-        mu = x[:, : self.speech_dim]
-        logvar = x[:, self.speech_dim :]
-        std = torch.exp(log_var.mul(0.5))
-
+        mu = x[:, : self.gan_emb_dim]
+        logvar = x[:, self.gan_emb_dim :]
+        std = torch.exp(logvar.mul(0.5))
         z = torch.randn(std.size()).to(x.device)
         z_ca = mu + std * z
-        return z_ca, mu, log_var
+        return z_ca, mu, logvar 
+
+class Interpolate(nn.Module):
+    def __init__(self, scale_factor, mode, size=None):
+        super(Interpolate, self).__init__()
+        self.interp = nn.functional.interpolate
+        self.scale_factor = scale_factor
+        self.mode = mode
+        self.size = size
+
+    def forward(self, x):
+        return self.interp(x, scale_factor=self.scale_factor, mode=self.mode, size=self.size)
 
 
 class UpBlock(nn.Module):
-    def __init__(self, in_channel, out_channel):
+    def __init__(self, in_channels, out_channels):
         super().__init__()
+        self.first_seq = Interpolate(scale_factor=2, mode="nearest")
         self.seq = nn.Sequential(
-            nn.Upsample(scale_factor=2, mode="nearest"),
             nn.Conv2d(
                 in_channels,
                 out_channels * 2,
@@ -45,13 +55,22 @@ class UpBlock(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            n.BatchNorm2d(out_planes * 2),
-            nn.GLU(),
+            nn.BatchNorm2d(out_channels * 2),
+            nn.GLU(dim=1)
         )
 
     def forward(self, x):
-        return self.seq(x)
+        x = self.first_seq(x)
+        x = self.seq(x)
+        return x
 
+class Block(nn.Module):
+    def __init__(self, desc):
+        super().__init__()
+        self.desc = desc
+    
+    def forward(self, x):
+        return x
 
 class InitStateGenerator(nn.Module):
     def __init__(self, in_dim: int, gen_dim: int):
@@ -60,15 +79,15 @@ class InitStateGenerator(nn.Module):
         self.in_dim = in_dim
         self.gen_dim = gen_dim
         self.input_projection = nn.Sequential(
-            nn.Linear(self.in_dim, self.gen_dim * 4 * 4 * 2),
+            nn.Linear(self.in_dim, self.gen_dim * 4 * 4 * 2, bias=False),
             nn.BatchNorm1d(self.gen_dim * 4 * 4 * 2),
-            nn.GLU(),
+            nn.GLU(dim=1),
         )
         self.seq_upsample = nn.Sequential(
-            UpBlock(self.gen_dim, self.gen_dim // 2),
-            UpBlock(self.gen_dim // 2, self.gen_dim // 4),
-            UpBlock(self.gen_dim // 4, self.gen_dim // 8),
-            UpBlock(self.gen_dim // 8, self.gen_dim // 16),
+            UpBlock(gen_dim, gen_dim // 2),
+            UpBlock(gen_dim // 2, gen_dim // 4),
+            UpBlock(gen_dim // 4, gen_dim // 8),
+            UpBlock(gen_dim // 8, gen_dim // 16),
         )
 
     def forward(self, z_code, c_code):
@@ -93,7 +112,7 @@ class ResBlock(nn.Module):
                 bias=False,
             ),
             nn.BatchNorm2d(in_channels * 2),
-            GLU(),
+            nn.GLU(dim=1),
             nn.Conv2d(
                 in_channels,
                 in_channels,
@@ -123,8 +142,8 @@ class NextStageGenerator(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.BatchNorm2d(out_planes * 2),
-            GLU(),
+            nn.BatchNorm2d(gen_dim * 2),
+            nn.GLU(dim=1),
         )
         self.residual = nn.Sequential(ResBlock(gen_dim), ResBlock(gen_dim))
         self.upsample = UpBlock(gen_dim * 2, gen_dim // 2)
@@ -138,7 +157,7 @@ class NextStageGenerator(nn.Module):
 
         out = self.joint_conv(concat_code)
         out = self.residual(out)
-        out = torch.cat((out_code, h_code), 1)
+        out = torch.cat((out, h_code), 1)
         out = self.upsample(out)
         return out
 

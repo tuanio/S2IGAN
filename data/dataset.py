@@ -116,7 +116,7 @@ class RDGDataset(Dataset):
         self.data_class = defaultdict(list)
         for data in self.walker:
             self.data_class[data.get("label")].append(data)
-
+        
         subset = json_file.rsplit(os.sep, 1)[-1].split("_", 1)[0]
 
         self.img_transform = get_img_transform(subset, input_size)
@@ -143,10 +143,15 @@ class RDGDataset(Dataset):
 
     def __getitem__(self, index):
         item = self.walker[index]
+        label = item['label']
 
         real_img = Image.open(item["img"])
         similar_img = Image.open(self.__get_random_same_class__(label)["img"])
         wrong_img = Image.open(self.__get_random_diff_class__(label)["img"])
+
+        real_img = self.img_transform(real_img)
+        similar_img = self.img_transform(similar_img)
+        wrong_img = self.img_transform(wrong_img)
 
         wav, sr = torchaudio.load(item["audio"])
         mel_spec = self.audio_transform(wav)

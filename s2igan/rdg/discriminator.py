@@ -73,6 +73,7 @@ class DownScale16TimesBlock(nn.Module):
 
 class DiscriminatorFor64By64(nn.Module):
     def __init__(self, disc_dim: int, gan_emb_dim: int):
+        super().__init__()
         self.disc_dim = disc_dim
         self.gan_emb_dim = gan_emb_dim
         self.down_scale = DownScale16TimesBlock(disc_dim)
@@ -85,7 +86,7 @@ class DiscriminatorFor64By64(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.BatchNorm2d(out_planes),
+            nn.BatchNorm2d(disc_dim * 8),
             nn.LeakyReLU(0.2, inplace=True),
         )
         self.logits = nn.Sequential(
@@ -100,7 +101,6 @@ class DiscriminatorFor64By64(nn.Module):
 
     def forward(self, x_var, c_code):
         x_code = self.down_scale(x_var)
-
         c_code = c_code.view(-1, self.gan_emb_dim, 1, 1)
         c_code = c_code.repeat(1, 1, 4, 4)
         code = torch.cat((c_code, x_code), 1)
@@ -114,6 +114,7 @@ class DiscriminatorFor64By64(nn.Module):
 
 class DiscriminatorFor128By128(nn.Module):
     def __init__(self, disc_dim: int, gan_emb_dim: int):
+        super().__init__()
         self.disc_dim = disc_dim
         self.gan_emb_dim = gan_emb_dim
         self.down_scale = nn.Sequential(
@@ -128,7 +129,7 @@ class DiscriminatorFor128By128(nn.Module):
                     padding=1,
                     bias=False,
                 ),
-                nn.BatchNorm2d(out_planes),
+                nn.BatchNorm2d(disc_dim * 8),
                 nn.LeakyReLU(0.2, inplace=True),
             ),
         )
@@ -141,7 +142,7 @@ class DiscriminatorFor128By128(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.BatchNorm2d(out_planes),
+            nn.BatchNorm2d(disc_dim * 8),
             nn.LeakyReLU(0.2, inplace=True),
         )
         self.logits = nn.Sequential(
@@ -170,6 +171,7 @@ class DiscriminatorFor128By128(nn.Module):
 
 class DiscriminatorFor256By256(nn.Module):
     def __init__(self, disc_dim: int, gan_emb_dim: int):
+        super().__init__()
         self.disc_dim = disc_dim
         self.gan_emb_dim = gan_emb_dim
         self.down_scale = nn.Sequential(
@@ -185,7 +187,7 @@ class DiscriminatorFor256By256(nn.Module):
                     padding=1,
                     bias=False,
                 ),
-                nn.BatchNorm2d(out_planes),
+                nn.BatchNorm2d(disc_dim * 16),
                 nn.LeakyReLU(0.2, inplace=True),
             ),
             nn.Sequential(
@@ -197,7 +199,7 @@ class DiscriminatorFor256By256(nn.Module):
                     padding=1,
                     bias=False,
                 ),
-                nn.BatchNorm2d(out_planes),
+                nn.BatchNorm2d(disc_dim * 8),
                 nn.LeakyReLU(0.2, inplace=True),
             ),
         )
@@ -210,7 +212,7 @@ class DiscriminatorFor256By256(nn.Module):
                 padding=1,
                 bias=False,
             ),
-            nn.BatchNorm2d(out_planes),
+            nn.BatchNorm2d(disc_dim * 8),
             nn.LeakyReLU(0.2, inplace=True),
         )
         self.logits = nn.Sequential(
