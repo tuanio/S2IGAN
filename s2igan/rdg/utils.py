@@ -82,7 +82,7 @@ def rdg_train_epoch(
 
         real_feat = models["ied"](real_img)
         similar_feat = models["ied"](similar_img)
-        fake_feat = models["ied"](fake_imgs[-1])
+        fake_feat = models["ied"](fake_imgs[256])
         wrong_feat = models["ied"](wrong_img)
 
         R1 = models["rs"](similar_feat, real_feat)
