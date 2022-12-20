@@ -96,7 +96,7 @@ def rdg_train_epoch(
         )
 
         # --- G
-        gen_loss += criterions["kl"](mu, logvar) * specific_params.kl_loss_coef
+        gen_loss += criterions["kl"](mu, logvar) * specific_params.kl_loss_coef + rs_loss
         gen_loss.backward()
         optimizers["gen"].step()
         schedulers["gen"].step()
