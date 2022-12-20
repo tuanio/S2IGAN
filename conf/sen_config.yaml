@@ -6,8 +6,8 @@ data:
     win_length: 250
     hop_length: 100
     n_class: 103 # get from dataset externally 
-    batch_size: 42
-    num_workers: 24
+    batch_size: 40
+    num_workers: 20
   train:
     json_file: ../data/train_flower_en2vi.json
     img_path: ../data/image_oxford/image_oxford

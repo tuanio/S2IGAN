@@ -53,6 +53,10 @@ def rdg_train_epoch(
             spec_len.to(device),
         )
 
+        update_D(models['disc'], optimizers['disc'], schedulers['disc'], criterion, specific_params, device)
+        update_RS(models['rs'], optimizers['rs'], schedulers['rs'], criterion, specific_params, device)
+        update_G(models['gen'], optimizers['gen'], schedulers['gen'], criterion, specific_params, device)
+
         bs = original_real_img.size(0)
 
         Z = torch.randn(bs, specific_params.latent_space_dim, device=device)
