@@ -92,16 +92,16 @@ def main(cfg: DictConfig):
     image_encoder = image_encoder.to(device)
     speech_encoder = speech_encoder.to(device)
 
-    try:
-        image_encoder = torch.compile(image_encoder)
-        discrminator_64 = torch.compile(discrminator_64)
-        discrminator_128 = torch.compile(discrminator_128)
-        discrminator_256 = torch.compile(discrminator_256)
-        relation_classifier = torch.compile(relation_classifier)
-        image_encoder = torch.compile(image_encoder)
-        speech_encoder = torch.compile(speech_encoder)
-    except:
-        print("Can't activate Pytorch 2.0")
+    # try:
+    #     image_encoder = torch.compile(image_encoder)
+    #     discrminator_64 = torch.compile(discrminator_64)
+    #     discrminator_128 = torch.compile(discrminator_128)
+    #     discrminator_256 = torch.compile(discrminator_256)
+    #     relation_classifier = torch.compile(relation_classifier)
+    #     image_encoder = torch.compile(image_encoder)
+    #     speech_encoder = torch.compile(speech_encoder)
+    # except:
+    #     print("Can't activate Pytorch 2.0")
 
     discriminators = {
         64: discrminator_64,
