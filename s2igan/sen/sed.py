@@ -71,6 +71,9 @@ class SpeechEncoder(nn.Module):
 
         cnn_out = cnn_out.permute(0, 2, 1)
 
+        print(l)
+        print(mel_spec_len)
+
         packed = pack_padded_sequence(
             cnn_out, l, batch_first=True, enforce_sorted=False
         )
