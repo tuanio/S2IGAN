@@ -82,33 +82,12 @@ def main(cfg: DictConfig):
             + speech_encoder.module.get_params()
             + list(classifier.module.parameters())
         )
-        # image_encoder_summary = summary(image_encoder.module, [(3, 299, 299,)])
-        # speech_encoder_summary = summary(
-        #     speech_encoder.module,
-        #     [(cfg.data.general.n_mels, 250,), (1,)],
-        # )
-        # classifier_summary = summary(
-        #     classifier.module, [(cfg.model.image_encoder.output_dim,)]
-        # )
     else:
         model_params = (
             image_encoder.get_params()
             + speech_encoder.get_params()
             + list(classifier.parameters())
         )
-        # image_encoder_summary = summary(image_encoder, [(3, 299, 299,)])
-        # speech_encoder_summary = summary(
-        #     speech_encoder,
-        #     [(cfg.data.general.n_mels, 500,), (1,)],
-        #     dtypes=[torch.float, torch.long],
-        # )
-        # classifier_summary = summary(
-        #     classifier, [(cfg.model.image_encoder.output_dim,)]
-        # )
-
-    # print(image_encoder_summary)
-    # print(speech_encoder_summary)
-    # print(classifier_summary)
 
     optimizer = torch.optim.AdamW(model_params, **cfg.optimizer)
     scheduler = None
@@ -121,13 +100,7 @@ def main(cfg: DictConfig):
             pct_start=cfg.scheduler.pct_start,
         )
         scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, **sched_dict)
-        # scheduler = torch.optim.lr_scheduler.LinearLR(
-        #     optimizer,
-        #     start_factor=1 / 3,
-        #     end_factor=1,
-        #     total_iters=int(0.2 * cfg.experiment.max_epoch),
-        #     verbose=True,
-        # )
+
     criterion = SENLoss(**cfg.loss).to(device)
 
     log_wandb = cfg.experiment.log_wandb
@@ -146,19 +119,23 @@ def main(cfg: DictConfig):
                 epoch,
                 log_wandb,
             )
-            # if scheduler:
-            #     scheduler.step()
-            #     wandb.log({"train/lr-LinearLR": scheduler.get_last_lr()[0]})
+            eval_result = sen_eval_epoch(
+                image_encoder,
+                speech_encoder,
+                classifier,
+                dataloader,
+                criterion,
+                device,
+                epoch,
+                log_wandb
+            )
 
-            torch.save(
-                dict(speech_encoder_state_dict=speech_encoder.state_dict()),
-                "speech_encoder.pt",
-            )
-            torch.save(
-                dict(image_encoder_state_dict=image_encoder.state_dict()),
-                "image_encoder.pt",
-            )
+            torch.save(speech_encoder.state_dict(), "save_ckpt/speech_encoder.pt")
+            torch.save(image_encoder.state_dict(), "save_ckpt/image_encoder.pt")
+            torch.save(classifier.state_dict(), "save_ckpt/classfier.pt")
+
     print("Train result:", train_result)
+    print("Eval result:", eval_result)
 
 
 if __name__ == "__main__":
