@@ -1,6 +1,7 @@
 import torch
 import torchvision
 from torch import nn
+
 from s2igan.utils import set_non_grad
 
 
@@ -24,6 +25,10 @@ class ImageEncoder(nn.Module):
 
     def get_params(self):
         return [p for p in self.parameters() if p.requires_grad]
+
+    def freeze_params(self):
+        for p in self.parameters():
+            p.requires_grads = False
 
     def forward(self, img):
         """

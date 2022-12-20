@@ -12,6 +12,9 @@ class RelationClassifier(nn.Module):
             nn.Linear(hid_dim, 4),
         )
 
+    def get_params(self):
+        return [p for p in self.parameters() if p.requires_grad]
+
     def forward(self, inp_a, inp_b):
         inp = torch.cat((inp_a, inp_b), dim=1)
         return self.seq(inp)

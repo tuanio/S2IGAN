@@ -13,6 +13,7 @@ def sen_collate_fn(batch):
 
     return imgs, specs, len_specs, labels
 
+
 def rdg_collate_fn(batch):
     real_imgs = torch.stack([i[0] for i in batch])
     similar_imgs = torch.stack([i[1] for i in batch])

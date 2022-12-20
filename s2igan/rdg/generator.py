@@ -11,8 +11,8 @@ class ConditioningAugmentationNetwork(nn.Module):
     ):
         super().__init__()
         self.speech_dim = speech_emb_dim
-        self.gan_dim = gan_emb_dim
-        self.fc = nn.Linear(self.speech_dim, self.gan_dim * 4)
+        self.gan_emb_dim = gan_emb_dim
+        self.fc = nn.Linear(self.speech_dim, self.gan_emb_dim * 4)
         # multiply by 2 if leaky relu
         # multiply by 4 if GLU
         # self.act = nn.LeakyReLU(negative_slope)
@@ -54,27 +54,27 @@ class UpBlock(nn.Module):
 
 
 class InitStateGenerator(nn.Module):
-    def __init__(self, in_dim: int, hid_dim: int):
+    def __init__(self, in_dim: int, gen_dim: int):
         super().__init__()
-        # in_dim = z_dim + gan_dim
+        # in_dim = z_dim + gan_emb_dim
         self.in_dim = in_dim
-        self.hid_dim = hid_dim
+        self.gen_dim = gen_dim
         self.input_projection = nn.Sequential(
-            nn.Linear(self.in_dim, self.hid_dim * 4 * 4 * 2),
-            nn.BatchNorm1d(self.hid_dim * 4 * 4 * 2),
+            nn.Linear(self.in_dim, self.gen_dim * 4 * 4 * 2),
+            nn.BatchNorm1d(self.gen_dim * 4 * 4 * 2),
             nn.GLU(),
         )
         self.seq_upsample = nn.Sequential(
-            UpBlock(self.hid_dim, self.hid_dim // 2),
-            UpBlock(self.hid_dim // 2, self.hid_dim // 4),
-            UpBlock(self.hid_dim // 4, self.hid_dim // 8),
-            UpBlock(self.hid_dim // 8, self.hid_dim // 16),
+            UpBlock(self.gen_dim, self.gen_dim // 2),
+            UpBlock(self.gen_dim // 2, self.gen_dim // 4),
+            UpBlock(self.gen_dim // 4, self.gen_dim // 8),
+            UpBlock(self.gen_dim // 8, self.gen_dim // 16),
         )
 
     def forward(self, z_code, c_code):
         inp = torch.cat((z_code, c_code), 1)
         out = self.input_projection(inp)
-        out = out.view(-1, self.hid_dim, 4, 4)
+        out = out.view(-1, self.gen_dim, 4, 4)
         # up from 4x4 -> 64x64
         out = self.seq_upsample(out)
         return out
@@ -110,14 +110,14 @@ class ResBlock(nn.Module):
 
 
 class NextStageGenerator(nn.Module):
-    def __init__(self, gan_emb_dim: int, hid_dim: int):
+    def __init__(self, gan_emb_dim: int, gen_dim: int):
         super().__init__()
         self.gan_emb_dim = gan_emb_dim
-        self.hid_dim = hid_dim
+        self.gen_dim = gen_dim
         self.joint_conv = nn.Sequential(
             nn.Conv2d(
-                gan_emb_dim + hid_dim,
-                hid_dim * 2,
+                gan_emb_dim + gen_dim,
+                gen_dim * 2,
                 kernel_size=3,
                 stride=1,
                 padding=1,
@@ -126,8 +126,8 @@ class NextStageGenerator(nn.Module):
             nn.BatchNorm2d(out_planes * 2),
             GLU(),
         )
-        self.residual = nn.Sequential(ResBlock(hid_dim), ResBlock(hid_dim))
-        self.upsample = UpBlock(hid_dim * 2, hid_dim // 2)
+        self.residual = nn.Sequential(ResBlock(gen_dim), ResBlock(gen_dim))
+        self.upsample = UpBlock(gen_dim * 2, gen_dim // 2)
 
     def forward(self, h_code, c_code):
         s_size = h_code.size(2)
@@ -144,12 +144,12 @@ class NextStageGenerator(nn.Module):
 
 
 class ImageGenerator(nn.Module):
-    def __init__(self, hid_dim: int):
+    def __init__(self, gen_dim: int):
         super().__init__()
         self.img = nn.Sequential(
             nn.Conv2d(
-                gan_emb_dim + hid_dim,
-                hid_dim * 2,
+                gen_dim,
+                3,
                 kernel_size=3,
                 stride=1,
                 padding=1,
@@ -164,23 +164,26 @@ class ImageGenerator(nn.Module):
 
 class DenselyStackedGenerator(nn.Module):
     def __init__(
-        self, latent_space_dim: int, speech_emb_dim: int, gan_emb_dim: int, hid_dim: int
+        self, latent_space_dim: int, speech_emb_dim: int, gen_dim: int, gan_emb_dim: int
     ):
         super().__init__()
-        inp_dim = latent_space_dim + speech_emb_dim
+        inp_dim = latent_space_dim + gan_emb_dim
 
         self.conditioning_augmentation = ConditioningAugmentationNetwork(
             speech_emb_dim=speech_emb_dim, gan_emb_dim=gan_emb_dim
         )
 
-        self.F0 = InitStateGenerator(in_dim=inp_dim, hid_dim=hid_dim * 16)
-        self.G0 = ImageGenerator(hid_dim=hid_dim)
+        self.F0 = InitStateGenerator(in_dim=inp_dim, gen_dim=gen_dim * 16)
+        self.G0 = ImageGenerator(gen_dim=gen_dim)
 
-        self.F1 = NextStageGenerator(gan_emb_dim, hid_dim=hid_dim)
-        self.G1 = ImageGenerator(hid_dim=hid_dim // 2)
+        self.F1 = NextStageGenerator(gan_emb_dim=gan_emb_dim, gen_dim=gen_dim)
+        self.G1 = ImageGenerator(gen_dim=gen_dim // 2)
 
-        self.F2 = NextStageGenerator(gan_emb_dim, hid_dim=hid_dim // 2)
-        self.G2 = ImageGenerator(hid_dim=hid_dim // 4)
+        self.F2 = NextStageGenerator(gan_emb_dim=gan_emb_dim, gen_dim=gen_dim // 2)
+        self.G2 = ImageGenerator(gen_dim=gen_dim // 4)
+
+    def get_params(self):
+        return [p for p in self.parameters() if p.requires_grad]
 
     def forward(self, z_code, speech_emb):
         c_code, mu, logvar = self.conditioning_augmentation(speech_emb)
@@ -189,6 +192,6 @@ class DenselyStackedGenerator(nn.Module):
         h1 = self.F1(h0, c_code)
         h2 = self.F2(h1, c_code)
 
-        fake_imgs = [self.G0(h0), self.G1(h1), self.G2(h2)]
+        fake_imgs = {64: self.G0(h0), 128: self.G1(h1), 256: self.G2(h2)}
 
         return fake_imgs, mu, logvar

@@ -1,14 +1,15 @@
-import torch
-from torch import nn
-from torch.utils.data import Dataset, DataLoader
 import json
 import os
+import random
+from collections import defaultdict
+
+import torch
 import torchaudio
+from PIL import Image
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
 from torchaudio.transforms import MelSpectrogram
 from torchvision import transforms as T
-from PIL import Image
-from collections import defaultdict
-import random
 
 
 def get_img_transform(subset, input_size):
@@ -58,11 +59,7 @@ class SENDataset(Dataset):
             for datum in data
         ]
         # check exits
-        self.walker = [
-            j
-            for i in walker
-            for j in i
-        ]
+        self.walker = [j for i in walker for j in i]
         subset = json_file.rsplit(os.sep, 1)[-1].split("_", 1)[0]
 
         self.img_transform = get_img_transform(subset, input_size)
@@ -114,16 +111,12 @@ class RDGDataset(Dataset):
             for datum in data
         ]
         # check exits
-        self.walker = [
-            j
-            for i in walker
-            for j in i
-        ]
-        
+        self.walker = [j for i in walker for j in i]
+
         self.data_class = defaultdict(list)
         for data in self.walker:
-            self.data_class[data.get('label')].append(data)
-        
+            self.data_class[data.get("label")].append(data)
+
         subset = json_file.rsplit(os.sep, 1)[-1].split("_", 1)[0]
 
         self.img_transform = get_img_transform(subset, input_size)
@@ -150,14 +143,13 @@ class RDGDataset(Dataset):
 
     def __getitem__(self, index):
         item = self.walker[index]
-        label = item['label']
 
         real_img = Image.open(item["img"])
-        similar_img = Image.open(self.__get_random_same_class__(label)['img'])
-        wrong_img = Image.open(self.__get_random_diff_class__(label)['img'])
+        similar_img = Image.open(self.__get_random_same_class__(label)["img"])
+        wrong_img = Image.open(self.__get_random_diff_class__(label)["img"])
 
         wav, sr = torchaudio.load(item["audio"])
         mel_spec = self.audio_transform(wav)
         mel_spec = mel_spec.squeeze().permute(1, 0)  # (len, n_mels)
 
-        return real_img, similar_img, wrong_img, mel_spec, mel_spec.size(0), label
+        return real_img, similar_img, wrong_img, mel_spec, mel_spec.size(0)

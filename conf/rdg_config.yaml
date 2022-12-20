@@ -28,6 +28,17 @@ data:
     hop_length: ${data.general.hop_length}
 
 model:
+  generator:
+    latent_space_dim: 100
+    speech_emb_dim: 1024
+    gan_emb_dim: 128
+    gen_dim: 64
+  discriminator:
+    disc_dim: 64
+    gan_emb_dim: ${model.generator.gan_emb_dim}
+  relation_classifier:
+    inp_dim: 1024
+    hid_dim: 128
   image_encoder:
     output_dim: 1024
   speech_encoder:
@@ -38,26 +49,31 @@ model:
     rnn_dim: 512
     rnn_num_layers: 2
     rnn_type: gru
-    rnn_dropout: 0.1
+    rnn_dropout: 0.05
     rnn_bidirectional: True
     attn_heads: 1
-    attn_dropout: 0.1
-  classifier:
-    in_features: ${model.image_encoder.output_dim}
-    out_features: ${data.general.n_class}
+    attn_dropout: 0.05
+  
 
 optimizer:
-  lr: 0.0005
+  lr: 0.0002
 
 scheduler:
   use: true
-  pct_start: 0.2
+  pct_start: 0.5
 
 experiment:
   train: true
   test: true
-  max_epoch: 50
+  max_epoch: 100
   log_wandb: false
+  specific_params:
+    latent_space_dim: ${model.generator.latent_space_dim}
+    img_dims:
+      - 64
+      - 128
+      - 256
+    kl_loss_coef: 2
 
 loss:
   beta: 10

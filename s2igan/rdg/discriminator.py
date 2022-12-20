@@ -26,10 +26,22 @@ class DownScale16TimesBlock(nn.Module):
     def __init__(self, disc_dim: int):
         super().__init__()
         self.seq = nn.Sequential(
-            nn.Conv2d(3, disc_dim, kernel_size=4, stride=2, padding=1, bias=False,),
+            nn.Conv2d(
+                3,
+                disc_dim,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+                bias=False,
+            ),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(
-                disc_dim, disc_dim * 2, kernel_size=4, stride=2, padding=1, bias=False,
+                disc_dim,
+                disc_dim * 2,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+                bias=False,
             ),
             nn.BatchNorm2d(disc_dim * 2),
             nn.LeakyReLU(0.2, inplace=True),
@@ -83,6 +95,9 @@ class DiscriminatorFor64By64(nn.Module):
             nn.Conv2d(disc_dim * 8, 1, kernel_size=4, stride=1), nn.Sigmoid()
         )
 
+    def get_params(self):
+        return [p for p in self.parameters() if p.requires_grad]
+
     def forward(self, x_var, c_code):
         x_code = self.down_scale(x_var)
 
@@ -94,7 +109,7 @@ class DiscriminatorFor64By64(nn.Module):
         output = self.logits(code)
         uncond_output = self.uncond_logits(x_code)
 
-        return [output.view(-1), uncond_output.view(-1)]
+        return {"cond": output.view(-1), "uncond": uncond_output.view(-1)}
 
 
 class DiscriminatorFor128By128(nn.Module):
@@ -136,6 +151,9 @@ class DiscriminatorFor128By128(nn.Module):
             nn.Conv2d(disc_dim * 8, 1, kernel_size=4, stride=1), nn.Sigmoid()
         )
 
+    def get_params(self):
+        return [p for p in self.parameters() if p.requires_grad]
+
     def forward(self, x_var, c_code):
         x_code = self.down_scale(x_var)
 
@@ -147,7 +165,7 @@ class DiscriminatorFor128By128(nn.Module):
         output = self.logits(code)
         uncond_output = self.uncond_logits(x_code)
 
-        return [output.view(-1), uncond_output.view(-1)]
+        return {"cond": output.view(-1), "uncond": uncond_output.view(-1)}
 
 
 class DiscriminatorFor256By256(nn.Module):
@@ -202,6 +220,9 @@ class DiscriminatorFor256By256(nn.Module):
             nn.Conv2d(disc_dim * 8, 1, kernel_size=4, stride=1), nn.Sigmoid()
         )
 
+    def get_params(self):
+        return [p for p in self.parameters() if p.requires_grad]
+
     def forward(self, x_var, c_code):
         x_code = self.down_scale(x_var)
 
@@ -213,4 +234,4 @@ class DiscriminatorFor256By256(nn.Module):
         output = self.logits(code)
         uncond_output = self.uncond_logits(x_code)
 
-        return [output.view(-1), uncond_output.view(-1)]
+        return {"cond": output.view(-1), "uncond": uncond_output.view(-1)}

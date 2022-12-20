@@ -68,3 +68,28 @@ class SENLoss(nn.Module):
         match_loss = self.matching_loss(x, y, labels)
         dist_loss = self.distinctive_loss(cls_x, cls_y, labels)
         return match_loss.detach(), dist_loss.detach(), match_loss + dist_loss
+
+
+class KLDivergenceLoss(nn.Module):
+    def __init__(self):
+        super(KLDivergenceLoss, self).__init__()
+
+    def forward(self, x_mean, x_logvar):
+        # Compute kl divergence loss
+        kl_div = torch.mean(x_mean.pow(2) + x_logvar.exp() - 1 - x_logvar)
+
+        return kl_div
+
+
+class RSLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.crit = nn.CrossEntropyLoss()
+
+    def forward(self, R1, R2, R3, R_GT_FI, zero_labels, one_labels, two_labels):
+        return (
+            self.crit(R1, one_labels)
+            + self.crit(R2, zero_labels)
+            + self.crit(R3, zero_labels)
+            + self.crit(R_GT_FI, two_labels)
+        )
