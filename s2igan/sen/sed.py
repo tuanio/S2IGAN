@@ -60,14 +60,14 @@ class SpeechEncoder(nn.Module):
         """
         cnn_out = self.cnn(mel_spec)
 
-        # l = [
-        #     torch.div(y - self.kernel_size, self.stride, rounding_mode="trunc") + 1
-        #     for y in mel_spec_len
-        # ]
-        # l = [
-        #     torch.div(y - self.kernel_size, self.stride, rounding_mode="trunc") + 1
-        #     for y in l
-        # ]
+        l = [
+            torch.div(y - self.kernel_size, self.stride, rounding_mode="trunc") + 1
+            for y in mel_spec_len
+        ]
+        l = [
+            torch.div(y - self.kernel_size, self.stride, rounding_mode="trunc") + 1
+            for y in l
+        ]
 
         cnn_out = cnn_out.permute(0, 2, 1)
 
