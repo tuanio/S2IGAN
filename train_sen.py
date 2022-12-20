@@ -115,7 +115,7 @@ def main(cfg: DictConfig):
                 image_encoder,
                 speech_encoder,
                 classifier,
-                dataloader,
+                test_dataloder,
                 criterion,
                 device,
                 epoch,
