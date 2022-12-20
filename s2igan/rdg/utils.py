@@ -13,6 +13,18 @@ def get_transform(img_dim):
 Resizer = {64: get_transform(64), 128: get_transform(128), 256: get_transform(256)}
 
 
+def update_D(models, optimizers, schedulers, criterion, specific_params, device):
+    ...
+
+
+def update_RS(models, optimizers, schedulers, criterion, specific_params, device):
+    ...
+
+
+def update_G(models, optimizers, schedulers, criterion, specific_params, device):
+    ...
+
+
 def rdg_train_epoch(
     models,
     dataloader,
@@ -40,9 +52,6 @@ def rdg_train_epoch(
             spec.to(device),
             spec_len.to(device),
         )
-
-        for i in optimizers.keys():
-            optimizers[i].zero_grad()
 
         bs = original_real_img.size(0)
 

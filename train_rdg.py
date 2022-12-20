@@ -103,19 +103,30 @@ def main(cfg: DictConfig):
     except:
         print("Can't activate Pytorch 2.0")
 
-    generator_params = generator.get_params() + relation_classifier.get_params()
-    optimizer_generator = torch.optim.AdamW(generator_params, **cfg.optimizer)
+    discriminators = {
+        64: discrminator_64,
+        128: discrminator_128,
+        256: discrminator_256,
+    }
 
-    discriminator_params = (
-        discrminator_64.get_params()
-        + discrminator_128.get_params()
-        + discrminator_256.get_params()
-    )
-    optimizer_discrminator = torch.optim.AdamW(discriminator_params, **cfg.optimizer)
+    models = {
+        "gen": generator,
+        "disc": discriminators,
+        "rs": relation_classifier,
+        "ied": image_encoder,
+        "sed": speech_encoder,
+    }
 
+    optimizer_generator = torch.optim.AdamW(generator.parameters(), **cfg.optimizer)
+    optimizer_discrminator = {
+        img_dim: torch.optim.AdamW(discriminators[img_dim], **cfg.optimizer)
+        for key, model in discriminators.keys()
+    }
+    optimizer_rs = torch.optim.AdamW(relation_classifier.parameters(), **cfg.optimizer)
     optimizers = {
         "gen": optimizer_generator,
         "disc": optimizer_discrminator,
+        "rs": optimizer_rs,
     }
 
     steps_per_epoch = len(train_dataloader)
@@ -127,19 +138,13 @@ def main(cfg: DictConfig):
     )
     schedulers = {
         "gen": torch.optim.lr_scheduler.OneCycleLR(optimizer_generator, **sched_dict),
-        "disc": torch.optim.lr_scheduler.OneCycleLR(
-            optimizer_discrminator, **sched_dict
-        ),
-    }
-
-    models = {
-        "gen": generator,
-        "disc_64": discrminator_64,
-        "disc_128": discrminator_128,
-        "disc_256": discrminator_256,
-        "rs": relation_classifier,
-        "ied": image_encoder,
-        "sed": speech_encoder,
+        "disc": {
+            img_dim: torch.optim.lr_scheduler.OneCycleLR(
+                optimizer_discrminator[img_dim], **cfg.optimizer
+            )
+            for key in discriminators.keys()
+        },
+        "rs": torch.optim.lr_scheduler.OneCycleLR(optimizer_rs, **sched_dict),
     }
 
     criterions = {
