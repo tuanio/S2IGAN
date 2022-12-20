@@ -13,7 +13,7 @@ from data.data_collator import sen_collate_fn
 from data.dataset import SENDataset
 from s2igan.loss import SENLoss
 from s2igan.sen import ImageEncoder, SpeechEncoder
-from s2igan.sen.utils import sen_train_epoch
+from s2igan.sen.utils import sen_train_epoch, sen_eval_epoch
 
 config_path = "conf"
 config_name = "sen_config"
