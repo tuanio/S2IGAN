@@ -147,8 +147,8 @@ def update_G(models, batch, optimizers, schedulers, criterions, specific_params,
     for img_dim in specific_params.img_dims:
 
         fake_out = models["disc"][img_dim](fake_imgs[img_dim], mu)
-        cond_loss = criterions["bce"](fake_out["cond"], one_labels)
-        uncond_loss = criterions["bce"](fake_out["uncond"], one_labels)
+        cond_loss = criterions["bce"](fake_out["cond"], zero_labels)
+        uncond_loss = criterions["bce"](fake_out["uncond"], zero_labels)
 
         wandb.log({f'train/cond_loss_{img_dim}': cond_loss.item()})
         wandb.log({f'train/uncond_loss_{img_dim}': uncond_loss.item()})
