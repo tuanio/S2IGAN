@@ -143,16 +143,17 @@ def update_G(models, batch, optimizers, schedulers, criterions, specific_params,
     one_labels = torch.ones(bs, device=device, dtype=torch.float)
     two_labels = torch.zeros(bs, device=device, dtype=torch.float) + 2
 
-    Z = torch.randn(bs, specific_params.latent_space_dim, device=device)
-    A = models["sed"](spec, spec_len)
-
     G_loss = 0
     for img_dim in specific_params.img_dims:
 
         fake_out = models["disc"][img_dim](fake_imgs[img_dim], mu)
-        G_loss += criterions["bce"](fake_out["cond"], one_labels) + criterions["bce"](
-            fake_out["uncond"], one_labels
-        )
+        cond_loss = criterions["bce"](fake_out["cond"], one_labels)
+        uncond_loss = criterions["bce"](fake_out["uncond"], one_labels)
+
+        wandb.log({'train/cond_loss_{img_dim}': cond_loss.item()})
+        wandb.log({'train/uncond_loss_{img_dim}': uncond_loss.item()})
+
+        G_loss += cond_loss + uncond_loss
 
         # real_feat = models["ied"](real_imgs[img_dim])
         # fake_feat = models["ied"](fake_imgs[img_dim])
