@@ -6,8 +6,8 @@ data:
     win_length: 250
     hop_length: 100
     n_class: 103 # get from dataset externally 
-    batch_size: 42
-    num_workers: 24
+    batch_size: 70
+    num_workers: 32
   train:
     json_file: ../data/train_flower_en2vi.json
     img_path: ../data/image_oxford/image_oxford
@@ -49,14 +49,14 @@ model:
     rnn_dim: 512
     rnn_num_layers: 2
     rnn_type: gru
-    rnn_dropout: 0.05
+    rnn_dropout: 0.1
     rnn_bidirectional: True
     attn_heads: 1
-    attn_dropout: 0.05
+    attn_dropout: 0.1
   
 
 optimizer:
-  lr: 0.00005
+  lr: 0.0004
 
 scheduler:
   use: true
@@ -73,7 +73,7 @@ experiment:
       - 64
       - 128
       - 256
-    kl_loss_coef: 2
+    kl_loss_coef: 1
 
 loss:
   beta: 10

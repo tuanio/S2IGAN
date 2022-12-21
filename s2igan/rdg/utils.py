@@ -102,7 +102,7 @@ def update_RS(
     similar_img = Resizer[256](origin_similar_img)
     wrong_img = Resizer[256](origin_wrong_img)
 
-    real_feat = models["ied"](real_img)
+    real_feat = models["ied"](real_img) 
     similar_feat = models["ied"](similar_img)
     fake_feat = models["ied"](fake_imgs[256].detach())
     wrong_feat = models["ied"](wrong_img)
