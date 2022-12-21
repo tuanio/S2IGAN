@@ -238,7 +238,7 @@ def rdg_train_epoch(
             specific_params,
             device,
         )
-        G_loss, fake_img, real_img = update_G(
+        G_loss, KL_loss, fake_img, real_img = update_G(
             models,
             batch,
             optimizers["gen"],
