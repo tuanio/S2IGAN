@@ -196,7 +196,7 @@ def update_G(
     wandb.log({"train/image_64": wandb.Image(image_64)})
     wandb.log({"train/image_128": wandb.Image(image_128)})
     wandb.log({"train/image_256": wandb.Image(image_256)})
-    wandb.log({"train/speech_description": wandb.Audio(wav.detach().numpy(), sample_rate=rs)})
+    wandb.log({"train/speech_description": wandb.Audio(wav.detach().numpy(), sample_rate=sr)})
 
     return (G_loss.detach().item(), KL_loss.detach().item(), sample_img)
 
