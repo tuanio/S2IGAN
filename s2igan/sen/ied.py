@@ -35,6 +35,8 @@ class ImageEncoder(nn.Module):
         img: (-1, 3, 299, 299)
         out: (-1, output_dim)
         """
-        img = nn.functional.interpolate(img, size=(299, 299), mode='bilinear', align_corners=False)
+        img = nn.functional.interpolate(
+            img, size=(299, 299), mode="bilinear", align_corners=False
+        )
         out = self.model(img)
         return nn.functional.normalize(out, p=2, dim=1)

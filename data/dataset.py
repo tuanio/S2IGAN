@@ -41,25 +41,33 @@ class SENDataset(Dataset):
         self.walker = [j for i in walker for j in i]
         subset = json_file.rsplit(os.sep, 1)[-1].split("_", 1)[0]
 
-        self.img_transform = {
-            'train': T.Compose(
-                [
-                    T.ToTensor(),
-                    T.RandomRotation(degrees=(0, 180)),
-                    T.RandomHorizontalFlip(p=0.5),
-                    T.RandomVerticalFlip(p=0.5),
-                    T.Resize((input_size, input_size)),
-                    T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                ]
-            ),
-            'test': T.Compose(
-                [
-                    T.ToTensor(),
-                    T.Resize((input_size, input_size)),
-                    T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                ]
-            )
-        }[subset]
+        # self.img_transform = {
+        #     'train': T.Compose(
+        #         [
+        #             T.ToTensor(),
+        #             T.RandomRotation(degrees=(0, 180)),
+        #             T.RandomHorizontalFlip(p=0.5),
+        #             T.RandomVerticalFlip(p=0.5),
+        #             T.Resize((input_size, input_size)),
+        #             T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        #         ]
+        #     ),
+        #     'test': T.Compose(
+        #         [
+        #             T.ToTensor(),
+        #             T.Resize((input_size, input_size)),
+        #             T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        #         ]
+        #     )
+        # }[subset]
+
+        self.img_transform = T.Compose(
+            [
+                T.ToTensor(),
+                T.Resize((input_size, input_size)),
+                T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            ]
+        )
 
         sample_rate = 16000  # default value
         self.audio_transform = MelSpectrogram(
@@ -116,25 +124,33 @@ class RDGDataset(Dataset):
 
         subset = json_file.rsplit(os.sep, 1)[-1].split("_", 1)[0]
 
-        self.img_transform = {
-            'train': T.Compose(
-                [
-                    T.ToTensor(),
-                    T.RandomRotation(degrees=(0, 180)),
-                    T.RandomHorizontalFlip(p=0.5),
-                    T.RandomVerticalFlip(p=0.5),
-                    T.Resize((input_size, input_size)),
-                    T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                ]
-            ),
-            'test': T.Compose(
-                [
-                    T.ToTensor(),
-                    T.Resize((input_size, input_size)),
-                    T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                ]
-            )
-        }[subset]
+        # self.img_transform = {
+        #     'train': T.Compose(
+        #         [
+        #             T.ToTensor(),
+        #             T.RandomRotation(degrees=(0, 180)),
+        #             T.RandomHorizontalFlip(p=0.5),
+        #             T.RandomVerticalFlip(p=0.5),
+        #             T.Resize((input_size, input_size)),
+        #             T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        #         ]
+        #     ),
+        #     'test': T.Compose(
+        #         [
+        #             T.ToTensor(),
+        #             T.Resize((input_size, input_size)),
+        #             T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        #         ]
+        #     )
+        # }[subset]
+
+        self.img_transform = T.Compose(
+            [
+                T.ToTensor(),
+                T.Resize((input_size, input_size)),
+                T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            ]
+        )
 
         sample_rate = 16000  # default value
         self.audio_transform = MelSpectrogram(

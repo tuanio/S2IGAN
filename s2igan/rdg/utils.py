@@ -194,7 +194,7 @@ def rdg_train_epoch(
             origin_similar_img.to(device),
             origin_wrong_img.to(device),
             spec.to(device),
-            spec_len.to(device)
+            spec_len.to(device),
         )
 
         D_loss = update_D(
