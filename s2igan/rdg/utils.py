@@ -187,7 +187,7 @@ def update_G(
     schedulers.step()
 
     i = random.randint(0, origin_real_img.size(0) - 1)
-    wav, sr = raw_audio[i]
+    audio_path, sr = raw_audio[i]
 
     image_64 = torch.cat((fake_imgs[64][i:i+1], real_imgs[64][i:i+1]), 0) * 0.5 + 0.5
     image_128 = torch.cat((fake_imgs[128][i:i+1], real_imgs[128][i:i+1]), 0) * 0.5 + 0.5
@@ -196,7 +196,7 @@ def update_G(
     wandb.log({"train/image_64": wandb.Image(image_64)})
     wandb.log({"train/image_128": wandb.Image(image_128)})
     wandb.log({"train/image_256": wandb.Image(image_256)})
-    wandb.log({"train/speech_description": wandb.Audio(wav.detach().numpy(), sample_rate=sr)})
+    wandb.log({"train/speech_description": wandb.Audio(audio_path, sample_rate=sr)})
 
     return (G_loss.detach().item(), KL_loss.detach().item(), sample_img)
 
