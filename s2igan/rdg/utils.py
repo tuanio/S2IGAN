@@ -102,7 +102,7 @@ def update_RS(
     similar_img = Resizer[256](origin_similar_img)
     wrong_img = Resizer[256](origin_wrong_img)
 
-    real_feat = models["ied"](real_img) 
+    real_feat = models["ied"](real_img)
     similar_feat = models["ied"](similar_img)
     fake_feat = models["ied"](fake_imgs[256].detach())
     wrong_feat = models["ied"](wrong_img)
@@ -121,7 +121,9 @@ def update_RS(
     return RS_loss.detach().item()
 
 
-def update_G(models, batch, optimizers, schedulers, criterions, specific_params, device):
+def update_G(
+    models, batch, optimizers, schedulers, criterions, specific_params, device
+):
     origin_real_img, origin_similar_img, origin_wrong_img, spec, spec_len = batch
 
     real_imgs, wrong_imgs, similar_imgs = {}, {}, {}
@@ -150,8 +152,8 @@ def update_G(models, batch, optimizers, schedulers, criterions, specific_params,
         cond_loss = criterions["bce"](fake_out["cond"], one_labels)
         uncond_loss = criterions["bce"](fake_out["uncond"], one_labels)
 
-        wandb.log({f'train/cond_loss_{img_dim}': cond_loss.item()})
-        wandb.log({f'train/uncond_loss_{img_dim}': uncond_loss.item()})
+        wandb.log({f"train/cond_loss_{img_dim}": cond_loss.item()})
+        wandb.log({f"train/uncond_loss_{img_dim}": uncond_loss.item()})
 
         G_loss += cond_loss + uncond_loss
 
@@ -165,7 +167,7 @@ def update_G(models, batch, optimizers, schedulers, criterions, specific_params,
     # similar_img = Resizer[256](origin_similar_img)
     # wrong_img = Resizer[256](origin_wrong_img)
 
-    # real_feat = models["ied"](real_img) 
+    # real_feat = models["ied"](real_img)
     # similar_feat = models["ied"](similar_img)
     # fake_feat = models["ied"](fake_imgs[256])
     # wrong_feat = models["ied"](wrong_img)
@@ -184,12 +186,15 @@ def update_G(models, batch, optimizers, schedulers, criterions, specific_params,
     optimizers.step()
     schedulers.step()
 
-    return (
-        G_loss.detach().item(),
-        KL_loss.detach().item(),
-        fake_imgs[256].detach()[:1],
-        real_imgs[256].detach()[:1],
-    )
+    i = random.rand(0, origin_real_img.size(0) - 1)
+
+    sample_img = {
+        64: torch.cat((fake_imgs[64][i], real_imgs[64][i]), 0) * 0.5 + 0.5,
+        128: torch.cat((fake_imgs[128][i], real_imgs[128][i]), 0) * 0.5 + 0.5,
+        256: torch.cat((fake_imgs[256][i], real_imgs[256][i]), 0) * 0.5 + 0.5,
+    }
+
+    return (G_loss.detach().item(), KL_loss.detach().item(), sample_img)
 
 
 def rdg_train_epoch(
@@ -239,7 +244,7 @@ def rdg_train_epoch(
             specific_params,
             device,
         )
-        G_loss, KL_loss, fake_img, real_img = update_G(
+        G_loss, KL_loss, sample_img = update_G(
             models,
             batch,
             optimizers["gen"],
@@ -249,16 +254,15 @@ def rdg_train_epoch(
             device,
         )
 
-        real_img = real_img * 0.5 + 0.5
-        fake_img = fake_img * 0.5 + 0.5
-
         if log_wandb:
             wandb.log({"train/G_loss": G_loss})
             wandb.log({"train/D_loss": D_loss})
             wandb.log({"train/KL_loss": KL_loss})
             wandb.log({"train/RS_loss": RS_loss})
             wandb.log({"train/epoch": epoch})
-            wandb.log({"train/images": wandb.Image(torch.cat((real_img, fake_img), 0))})
+            wandb.log({"train/image_64": wandb.Image(sample_img[64])})
+            wandb.log({"train/image_128": wandb.Image(sample_img[128])})
+            wandb.log({"train/image_256": wandb.Image(sample_img[256])})
             wandb.log({"train/lr-OneCycleLR_G": schedulers["gen"].get_last_lr()[0]})
 
         pbar.set_description(
