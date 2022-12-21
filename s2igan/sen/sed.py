@@ -60,25 +60,25 @@ class SpeechEncoder(nn.Module):
         """
         cnn_out = self.cnn(mel_spec)
 
-        l = [
-            torch.div(y - self.kernel_size, self.stride, rounding_mode="trunc") + 1
-            for y in mel_spec_len
-        ]
-        l = [
-            torch.div(y - self.kernel_size, self.stride, rounding_mode="trunc") + 1
-            for y in l
-        ]
+        # l = [
+        #     torch.div(y - self.kernel_size, self.stride, rounding_mode="trunc") + 1
+        #     for y in mel_spec_len
+        # ]
+        # l = [
+        #     torch.div(y - self.kernel_size, self.stride, rounding_mode="trunc") + 1
+        #     for y in l
+        # ]
 
         cnn_out = cnn_out.permute(0, 2, 1)
 
-        packed = pack_padded_sequence(
-            cnn_out, l, batch_first=True, enforce_sorted=False
-        )
-        self.rnn.flatten_parameters()
-        out, hidden_state = self.rnn(packed)
-        out, seq_len = pad_packed_sequence(out, batch_first=True)
+        # packed = pack_padded_sequence(
+        #     cnn_out, l, batch_first=True, enforce_sorted=False
+        # )
+        # self.rnn.flatten_parameters()
+        # out, hidden_state = self.rnn(packed)
+        # out, seq_len = pad_packed_sequence(out, batch_first=True)
         # pack input before RNN to reduce computing efforts
-        # out, hidden_state = self.rnn(cnn_out)
+        out, hidden_state = self.rnn(cnn_out)
 
         out, weights = self.self_attention(out, out, out)
         out = out.mean(dim=1)  # mean the time step
