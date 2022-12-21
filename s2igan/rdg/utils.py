@@ -187,12 +187,13 @@ def update_G(
     schedulers.step()
 
     i = random.randint(0, origin_real_img.size(0) - 1)
+    image_64 = torch.cat((fake_imgs[64][i:i+1], real_imgs[64][i:i+1]), 0) * 0.5 + 0.5
+    image_128 = torch.cat((fake_imgs[128][i:i+1], real_imgs[128][i:i+1]), 0) * 0.5 + 0.5
+    image_256 = torch.cat((fake_imgs[256][i:i+1], real_imgs[256][i:i+1]), 0) * 0.5 + 0.5
 
-    sample_img = {
-        64: torch.cat((fake_imgs[64][i:i+1], real_imgs[64][i:i+1]), 0) * 0.5 + 0.5,
-        128: torch.cat((fake_imgs[128][i:i+1], real_imgs[128][i:i+1]), 0) * 0.5 + 0.5,
-        256: torch.cat((fake_imgs[256][i:i+1], real_imgs[256][i:i+1]), 0) * 0.5 + 0.5,
-    }
+    wandb.log({"train/image_64": wandb.Image(image_64)})
+    wandb.log({"train/image_128": wandb.Image(image_128)})
+    wandb.log({"train/image_256": wandb.Image(image_256)})
 
     return (G_loss.detach().item(), KL_loss.detach().item(), sample_img)
 
@@ -244,7 +245,7 @@ def rdg_train_epoch(
             specific_params,
             device,
         )
-        G_loss, KL_loss, sample_img = update_G(
+        G_loss, KL_loss = update_G(
             models,
             batch,
             optimizers["gen"],
@@ -260,9 +261,6 @@ def rdg_train_epoch(
             wandb.log({"train/KL_loss": KL_loss})
             wandb.log({"train/RS_loss": RS_loss})
             wandb.log({"train/epoch": epoch})
-            wandb.log({"train/image_64": wandb.Image(sample_img[64])})
-            wandb.log({"train/image_128": wandb.Image(sample_img[128])})
-            wandb.log({"train/image_256": wandb.Image(sample_img[256])})
             wandb.log({"train/lr-OneCycleLR_G": schedulers["gen"].get_last_lr()[0]})
 
         pbar.set_description(
