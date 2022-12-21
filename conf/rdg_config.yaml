@@ -73,7 +73,7 @@ experiment:
       - 64
       - 128
       - 256
-    kl_loss_coef: 1
+    kl_loss_coef: 2
 
 loss:
   beta: 10

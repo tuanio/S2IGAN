@@ -189,7 +189,7 @@ def update_G(
     i = random.randint(0, origin_real_img.size(0) - 1)
 
     sample_img = {
-        64: torch.cat((fake_imgs[64][i:+1], real_imgs[64][i:i+1]), 0) * 0.5 + 0.5,
+        64: torch.cat((fake_imgs[64][i:i+1], real_imgs[64][i:i+1]), 0) * 0.5 + 0.5,
         128: torch.cat((fake_imgs[128][i:i+1], real_imgs[128][i:i+1]), 0) * 0.5 + 0.5,
         256: torch.cat((fake_imgs[256][i:i+1], real_imgs[256][i:i+1]), 0) * 0.5 + 0.5,
     }
