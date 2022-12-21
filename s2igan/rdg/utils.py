@@ -1,6 +1,6 @@
 import torch
 from tqdm import tqdm
-
+import random
 import wandb
 from torchvision import transforms as T
 
@@ -186,7 +186,7 @@ def update_G(
     optimizers.step()
     schedulers.step()
 
-    i = random.rand(0, origin_real_img.size(0) - 1)
+    i = random.randint(0, origin_real_img.size(0) - 1)
 
     sample_img = {
         64: torch.cat((fake_imgs[64][i], real_imgs[64][i]), 0) * 0.5 + 0.5,
