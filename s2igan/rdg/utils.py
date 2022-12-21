@@ -147,38 +147,38 @@ def update_G(models, batch, optimizers, schedulers, criterions, specific_params,
     for img_dim in specific_params.img_dims:
 
         fake_out = models["disc"][img_dim](fake_imgs[img_dim], mu)
-        cond_loss = criterions["bce"](fake_out["cond"], zero_labels)
-        uncond_loss = criterions["bce"](fake_out["uncond"], zero_labels)
+        cond_loss = criterions["bce"](fake_out["cond"], one_labels)
+        uncond_loss = criterions["bce"](fake_out["uncond"], one_labels)
 
         wandb.log({f'train/cond_loss_{img_dim}': cond_loss.item()})
         wandb.log({f'train/uncond_loss_{img_dim}': uncond_loss.item()})
 
         G_loss += cond_loss + uncond_loss
 
-        # real_feat = models["ied"](real_imgs[img_dim])
-        # fake_feat = models["ied"](fake_imgs[img_dim])
-        # rs_out = models["rs"](real_feat, fake_feat)
+        real_feat = models["ied"](real_imgs[img_dim])
+        fake_feat = models["ied"](fake_imgs[img_dim])
+        rs_out = models["rs"](real_feat, fake_feat)
 
-        # G_loss += criterions["ce"](rs_out, one_labels.long())
+        G_loss += criterions["ce"](rs_out, one_labels.long())
 
-    real_img = Resizer[256](origin_real_img)
-    similar_img = Resizer[256](origin_similar_img)
-    wrong_img = Resizer[256](origin_wrong_img)
+    # real_img = Resizer[256](origin_real_img)
+    # similar_img = Resizer[256](origin_similar_img)
+    # wrong_img = Resizer[256](origin_wrong_img)
 
-    real_feat = models["ied"](real_img) 
-    similar_feat = models["ied"](similar_img)
-    fake_feat = models["ied"](fake_imgs[256])
-    wrong_feat = models["ied"](wrong_img)
+    # real_feat = models["ied"](real_img) 
+    # similar_feat = models["ied"](similar_img)
+    # fake_feat = models["ied"](fake_imgs[256])
+    # wrong_feat = models["ied"](wrong_img)
 
-    R1 = models["rs"](similar_feat, real_feat)
-    R2 = models["rs"](wrong_feat, real_feat)
-    R3 = models["rs"](real_feat, real_feat)
-    R_GT_FI = models["rs"](fake_feat, real_feat)
+    # R1 = models["rs"](similar_feat, real_feat)
+    # R2 = models["rs"](wrong_feat, real_feat)
+    # R3 = models["rs"](real_feat, real_feat)
+    # R_GT_FI = models["rs"](fake_feat, real_feat)
 
-    RS_loss = criterions["rs"](R1, R2, R3, R_GT_FI, zero_labels, one_labels, two_labels)
+    # RS_loss = criterions["rs"](R1, R2, R3, R_GT_FI, zero_labels, one_labels, two_labels)
 
     KL_loss = criterions["kl"](mu, logvar) * specific_params.kl_loss_coef
-    G_loss += RS_loss
+    # G_loss += RS_loss
     G_loss += KL_loss
     G_loss.backward()
     optimizers.step()
