@@ -52,6 +52,10 @@ def main(cfg: DictConfig):
         print("Loading Speech Encoder state dict...")
         print(speech_encoder.load_state_dict(torch.load(cfg.ckpt.speech_encoder)))
 
+    if cfg.ckpt.classifier:
+        print("Loading Classifier state dict...")
+        print(classifier.load_state_dict(torch.load(cfg.ckpt.classifier)))
+
     if multi_gpu:
         image_encoder = nn.DataParallel(image_encoder, device_ids=device_ids)
         speech_encoder = nn.DataParallel(speech_encoder, device_ids=device_ids)
