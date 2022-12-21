@@ -198,7 +198,7 @@ def update_G(
     wandb.log({"train/image_256": wandb.Image(image_256)})
     wandb.log({"train/speech_description": wandb.Audio(audio_path, sample_rate=sr)})
 
-    return (G_loss.detach().item(), KL_loss.detach().item(), sample_img)
+    return G_loss.detach().item(), KL_loss.detach().item()
 
 
 def rdg_train_epoch(
