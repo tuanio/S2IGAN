@@ -188,4 +188,4 @@ class RDGDataset(Dataset):
         mel_spec = self.audio_transform(wav)
         mel_spec = mel_spec.squeeze().permute(1, 0)  # (len, n_mels)
 
-        return real_img, similar_img, wrong_img, mel_spec, mel_spec.size(0)
+        return real_img, similar_img, wrong_img, mel_spec, mel_spec.size(0), (wav, sr)

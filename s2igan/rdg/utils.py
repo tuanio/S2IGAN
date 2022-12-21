@@ -15,7 +15,7 @@ Resizer = {64: get_transform(64), 128: get_transform(128), 256: get_transform(25
 def update_D(
     models, batch, optimizers, schedulers, criterions, specific_params, device
 ):
-    origin_real_img, origin_similar_img, origin_wrong_img, spec, spec_len = batch
+    origin_real_img, origin_similar_img, origin_wrong_img, spec, spec_len, raw_audio = batch
 
     real_imgs, wrong_imgs, similar_imgs = {}, {}, {}
     for img_dim in specific_params.img_dims:
@@ -77,7 +77,7 @@ def update_D(
 def update_RS(
     models, batch, optimizers, schedulers, criterions, specific_params, device
 ):
-    origin_real_img, origin_similar_img, origin_wrong_img, spec, spec_len = batch
+    origin_real_img, origin_similar_img, origin_wrong_img, spec, spec_len, raw_audio = batch
 
     real_imgs, wrong_imgs, similar_imgs = {}, {}, {}
     for img_dim in specific_params.img_dims:
@@ -124,7 +124,7 @@ def update_RS(
 def update_G(
     models, batch, optimizers, schedulers, criterions, specific_params, device
 ):
-    origin_real_img, origin_similar_img, origin_wrong_img, spec, spec_len = batch
+    origin_real_img, origin_similar_img, origin_wrong_img, spec, spec_len, raw_audio = batch
 
     real_imgs, wrong_imgs, similar_imgs = {}, {}, {}
     for img_dim in specific_params.img_dims:
@@ -187,6 +187,8 @@ def update_G(
     schedulers.step()
 
     i = random.randint(0, origin_real_img.size(0) - 1)
+    wav, sr = raw_audio[i]
+
     image_64 = torch.cat((fake_imgs[64][i:i+1], real_imgs[64][i:i+1]), 0) * 0.5 + 0.5
     image_128 = torch.cat((fake_imgs[128][i:i+1], real_imgs[128][i:i+1]), 0) * 0.5 + 0.5
     image_256 = torch.cat((fake_imgs[256][i:i+1], real_imgs[256][i:i+1]), 0) * 0.5 + 0.5
@@ -194,6 +196,7 @@ def update_G(
     wandb.log({"train/image_64": wandb.Image(image_64)})
     wandb.log({"train/image_128": wandb.Image(image_128)})
     wandb.log({"train/image_256": wandb.Image(image_256)})
+    wandb.log({"train/speech_description": wandb.Audio(wav.detach().numpy(), sample_rate=rs)})
 
     return (G_loss.detach().item(), KL_loss.detach().item(), sample_img)
 
@@ -217,6 +220,7 @@ def rdg_train_epoch(
         origin_wrong_img,
         spec,
         spec_len,
+        raw_audio
     ) in pbar:
         # origin_real_img, origin_similar_img, origin_wrong_img, spec, spec_len
         batch = (
@@ -225,6 +229,7 @@ def rdg_train_epoch(
             origin_wrong_img.to(device),
             spec.to(device),
             spec_len.to(device),
+            raw_audio
         )
 
         D_loss = update_D(
