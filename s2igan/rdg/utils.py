@@ -121,7 +121,7 @@ def update_RS(
     return RS_loss.detach().item()
 
 
-def update_G(models, batch, optimizers, schedulers, criterion, specific_params, device):
+def update_G(models, batch, optimizers, schedulers, criterions, specific_params, device):
     origin_real_img, origin_similar_img, origin_wrong_img, spec, spec_len = batch
 
     real_imgs, wrong_imgs, similar_imgs = {}, {}, {}
@@ -150,7 +150,7 @@ def update_G(models, batch, optimizers, schedulers, criterion, specific_params, 
     for img_dim in specific_params.img_dims:
 
         fake_out = models["disc"][img_dim](fake_imgs[img_dim], mu)
-        G_loss += criterion["bce"](fake_out["cond"], one_labels) + criterion["bce"](
+        G_loss += criterions["bce"](fake_out["cond"], one_labels) + criterions["bce"](
             fake_out["uncond"], one_labels
         )
 
@@ -158,7 +158,7 @@ def update_G(models, batch, optimizers, schedulers, criterion, specific_params, 
         # fake_feat = models["ied"](fake_imgs[img_dim])
         # rs_out = models["rs"](real_feat, fake_feat)
 
-        # G_loss += criterion["ce"](rs_out, one_labels.long())
+        # G_loss += criterions["ce"](rs_out, one_labels.long())
 
     real_img = Resizer[256](origin_real_img)
     similar_img = Resizer[256](origin_similar_img)
@@ -177,7 +177,7 @@ def update_G(models, batch, optimizers, schedulers, criterion, specific_params, 
     RS_loss = criterions["rs"](R1, R2, R3, R_GT_FI, zero_labels, one_labels, two_labels)
 
     G_loss += RS_loss
-    G_loss += criterion["kl"](mu, logvar) * specific_params.kl_loss_coef
+    G_loss += criterions["kl"](mu, logvar) * specific_params.kl_loss_coef
     G_loss.backward()
     optimizers.step()
     schedulers.step()
