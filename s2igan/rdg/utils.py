@@ -150,7 +150,7 @@ def update_G(models, batch, optimizers, schedulers, criterion, specific_params, 
     for img_dim in specific_params.img_dims:
 
         fake_out = models["disc"][img_dim](fake_imgs[img_dim], mu)
-        G_loss += criterion["ce"](fake_out["cond"], one_labels) + criterion["ce"](
+        G_loss += criterion["bce"](fake_out["cond"], one_labels) + criterion["bce"](
             fake_out["uncond"], one_labels
         )
 
@@ -165,7 +165,11 @@ def update_G(models, batch, optimizers, schedulers, criterion, specific_params, 
     optimizers.step()
     schedulers.step()
 
-    return G_loss.detach().item(), fake_imgs[256].detach(), real_img[256].detach()
+    return (
+        G_loss.detach().item(),
+        fake_imgs[256].detach()[:1],
+        real_imgs[256].detach()[:1],
+    )
 
 
 def rdg_train_epoch(

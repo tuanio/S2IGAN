@@ -90,6 +90,6 @@ class RSLoss(nn.Module):
         return (
             self.crit(R1, one_labels.long())
             + self.crit(R2, zero_labels.long())
-            + self.crit(R3, zero_labels.long())
-            + self.crit(R_GT_FI, two_labels.long())
+            + self.crit(R3, two_labels.long())
+            + self.crit(R_GT_FI, zero_labels.long())
         )
