@@ -176,14 +176,16 @@ def update_G(models, batch, optimizers, schedulers, criterions, specific_params,
 
     RS_loss = criterions["rs"](R1, R2, R3, R_GT_FI, zero_labels, one_labels, two_labels)
 
+    KL_loss = criterions["kl"](mu, logvar) * specific_params.kl_loss_coef
     G_loss += RS_loss
-    G_loss += criterions["kl"](mu, logvar) * specific_params.kl_loss_coef
+    G_loss += KL_loss
     G_loss.backward()
     optimizers.step()
     schedulers.step()
 
     return (
         G_loss.detach().item(),
+        KL_loss.detach().item(),
         fake_imgs[256].detach()[:1],
         real_imgs[256].detach()[:1],
     )
@@ -252,6 +254,7 @@ def rdg_train_epoch(
         if log_wandb:
             wandb.log({"train/G_loss": G_loss})
             wandb.log({"train/D_loss": D_loss})
+            wandb.log({"train/KL_loss": KL_loss})
             wandb.log({"train/RS_loss": RS_loss})
             wandb.log({"train/epoch": epoch})
             wandb.log({"train/images": wandb.Image(torch.cat((real_img, fake_img), 0))})
