@@ -150,8 +150,8 @@ def update_G(models, batch, optimizers, schedulers, criterions, specific_params,
         cond_loss = criterions["bce"](fake_out["cond"], one_labels)
         uncond_loss = criterions["bce"](fake_out["uncond"], one_labels)
 
-        wandb.log({'train/cond_loss_{img_dim}': cond_loss.item()})
-        wandb.log({'train/uncond_loss_{img_dim}': uncond_loss.item()})
+        wandb.log({f'train/cond_loss_{img_dim}': cond_loss.item()})
+        wandb.log({f'train/uncond_loss_{img_dim}': uncond_loss.item()})
 
         G_loss += cond_loss + uncond_loss
 
