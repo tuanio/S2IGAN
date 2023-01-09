@@ -2,6 +2,7 @@
 2. Update RS
 3. Update G
 
+```
   train:
     json_file: /home/admin/workspace/tuan/s2igan_model/dataset/train_flower_en2vi.json
     img_path: /home/admin/workspace/tuan/s2igan_model/dataset/image_oxford/image_oxford
@@ -20,3 +21,4 @@
     n_mels: ${data.general.n_mels}
     win_length: ${data.general.win_length}
     hop_length: ${data.general.hop_length}
+```
